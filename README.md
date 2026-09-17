@@ -206,6 +206,7 @@ apiable.tokensToUrl(tokens, { sort })     // -> FlexUrl (immutable)
 apiable.urlToTokens(url)                  // -> { tokens, sort, url }
 apiable.requestUri(tokens, { sort })      // -> "/api/v1/issues?filter[...]=..."
 apiable.requestParams(tokens, { sort })   // -> the same request, as flex-url's nested object
+// every one of the three also takes `path` to override the factory's default for one call
 apiable.schema()                          // -> the EndpointSchema apiable's exporter would publish
 ```
 
