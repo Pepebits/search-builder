@@ -5,7 +5,7 @@ import { chromium } from 'playwright'
 import { readFileSync } from 'node:fs'
 
 const app = readFileSync(new URL('../.tmp/test-build/app.js', import.meta.url), 'utf8')
-const css = readFileSync(new URL('../.tmp/test-build/vue-search.css', import.meta.url), 'utf8')
+const css = readFileSync(new URL('../.tmp/test-build/search-builder.css', import.meta.url), 'utf8')
 
 let pass = 0, fail = 0
 const check = (name, got, want) => {
