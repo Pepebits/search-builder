@@ -31,8 +31,13 @@ export const operatorSymbol = (options: SearchBuilderOptions, key: string | null
 export const isMultiSelect = (state: SearchBuilderState, options: SearchBuilderOptions): boolean =>
   operatorFor(options, state.draftKey, state.draftOperator)?.multiple === true
 
-export const valuePool = (state: SearchBuilderState, def: FilterDef | null): Value[] =>
-  [...(def?.specialValues ?? []), ...(def?.values ?? []), ...state.fetched]
+export const valuePool = (state: SearchBuilderState, def: FilterDef | null): Value[] => [
+  ...(def?.specialValues ?? []),
+  ...(def?.values ?? []),
+  ...state.fetched,
+  // Last, so a live fetch wins over what was remembered about the same value.
+  ...(def ? Object.values(state.seen[def.key] ?? {}) : [])
+]
 
 export const valueLabel = (state: SearchBuilderState, options: SearchBuilderOptions, key: string | null, value: string): string =>
   valuePool(state, defOf(options, key)).find((v) => v.value === value)?.label ?? value
@@ -121,8 +126,10 @@ function computeGroups (state: SearchBuilderState, options: SearchBuilderOptions
     id: `v:${v.value}`, kind: 'value', label: v.label, payload: v.value,
     color: v.color, initials: v.initials, avatar: v.avatar, sub: v.sub, special: v.special, of: def.kind
   })
-  // Look recents up across specials too, or a remembered "None" never resurfaces.
-  const lookup = [...specials, ...pool]
+  // Look recents up across specials too, or a remembered "None" never resurfaces;
+  // and across values seen in earlier fetches, or an async filter never has recents.
+  const remembered = Object.values(state.seen[def.key] ?? {}).filter((v) => !pool.some((p) => p.value === v.value))
+  const lookup = [...specials, ...pool, ...remembered]
   const recentValues = (state.recents[def.key] ?? [])
     .map((value) => lookup.find((v) => v.value === value))
     .filter((v): v is Value => !!v && !taken.has(v.value) && matches(v, text))

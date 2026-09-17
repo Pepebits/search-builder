@@ -111,6 +111,13 @@ export interface SearchBuilderState {
   loading: boolean
   fetched: Value[]
   recents: Record<string, string[]>
+  /**
+   * Values committed from a fetched list, by filter key then value. A fetched
+   * list is discarded when the draft resets, so this is what lets a chip keep
+   * saying "Rin Tanaka" rather than "rin.tanaka", and what lets "Recently
+   * used" offer her again with her avatar before any new fetch has returned.
+   */
+  seen: Record<string, Record<string, Value>>
   announcement: string
 }
 

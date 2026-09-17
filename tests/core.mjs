@@ -257,17 +257,11 @@ function pick (store, kind, payload) {
   check('N2. aria-activedescendant still names a real option', ids.includes(active), true)
 }
 
-// ---- one token, two names (review round 1, fixed) ----
-// `commitToken` used to announce from the state *before* the transition, so
-// `spokenToken` still saw `state.fetched`; the chip and `appliedSummary` are
-// read after the commit, and `resetDraft` has emptied `fetched` by then. For a
-// filter whose values are fetched, the live region said "Rin Tanaka" while
-// `aria-describedby` said "rin.tanaka". The original composable built the
-// sentence after `resetDraft()`, so the announcement is meant to be the half
-// that falls back to the raw value — fixed by reading the post-commit state
-// for the message too, same as the chip and the summary. The underlying wart
-// (a fetched label becomes unrecoverable once `fetched` is cleared) is
-// pre-existing and intentionally left alone; see the comment in state.ts.
+// ---- a fetched value keeps its label after the list is gone ----
+// `resetDraft` empties `fetched` on commit. Without a memory of what was
+// picked, the chip, the applied summary and the live region all fell back to
+// the raw value ("rin.tanaka"). `rememberRecent` now copies fetched values
+// into `state.seen`, so all three say the same thing, and it is the label.
 {
   const seen = []
   const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t17', onAnnounce: (t) => seen.push(t) })
@@ -282,6 +276,17 @@ function pick (store, kind, payload) {
     spokenInLive, chipValues(store.getState(), store.getOptions(), token))
   check('O2. and so does the applied summary',
     appliedSummary(store.getState(), store.getOptions()).includes(spokenInLive), true)
+  check('O3. and it is the label, not the raw value', chipValues(store.getState(), store.getOptions(), token), 'Rin Tanaka')
+  check('O4. the fetched list itself was discarded', store.getState().fetched, [])
+  // Remove the chip (Assignee is not repeatable) and reopen the filter before
+  // any new fetch has returned: she is offered from memory, under Recently
+  // used, avatar and all.
+  store.actions.removeToken(token.id)
+  pick(store, 'filter', 'assignee')
+  pick(store, 'operator', 'equal')
+  const early = groups(store.getState(), store.getOptions()).find((g) => g.id === 'recent')
+  check('O5. recents draw on remembered values before the fetch lands',
+    early?.options.map((o) => [o.label, o.initials]), [['Rin Tanaka', 'RT']])
 }
 
 console.log(`\n${pass} passed, ${fail} failed`)

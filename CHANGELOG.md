@@ -4,6 +4,20 @@ All notable changes to this project are documented in this file. The format foll
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/) — pre-1.0, so the public API can still move.
 
+## [Unreleased]
+
+### Fixed
+
+- A value picked from a fetched list (an assignee, say) kept its label, avatar and initials after
+  the token was committed. Chips, the applied summary and the live region used to fall back to
+  the raw value once the fetched list was discarded, and "Recently used" could not offer it again
+  until a new fetch returned it.
+
+### Changed
+
+- The React test build is a development build under `<StrictMode>`, so React's own warnings and
+  its double-invoked effects now run under the suite.
+
 ## [0.1.0] — 2026-09-17
 
 First published release.

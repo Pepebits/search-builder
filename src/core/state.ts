@@ -38,6 +38,7 @@ export function initialState (options: SearchBuilderOptions): SearchBuilderState
     loading: false,
     fetched: [],
     recents: {},
+    seen: {},
     announcement: ''
   }
 }
@@ -69,15 +70,27 @@ export function carryValues (values: string[], operator: Operator | null, def: F
   return values.length === 1 ? values[0] : null
 }
 
+/**
+ * Two memories at once: the order values were used in (`recents`), and the
+ * `Value` objects themselves (`seen`) for anything that came from a fetched
+ * list — read while `state.fetched` is still populated, before the draft
+ * resets and discards it. Static values need no copy; the definition has them.
+ */
 export function rememberRecent (state: SearchBuilderState, options: SearchBuilderOptions, key: string, values: string[]): SearchBuilderState {
   const limit = options.recentLimit ?? 3
   const previous = state.recents[key] ?? []
+  const seenHere = { ...(state.seen[key] ?? {}) }
+  for (const value of values) {
+    const found = state.fetched.find((v) => v.value === value)
+    if (found) seenHere[value] = found
+  }
   return {
     ...state,
     recents: {
       ...state.recents,
       [key]: [...values, ...previous.filter((v) => !values.includes(v))].slice(0, limit)
-    }
+    },
+    seen: { ...state.seen, [key]: seenHere }
   }
 }
 
@@ -89,21 +102,16 @@ export function commitToken (state: SearchBuilderState, options: SearchBuilderOp
     let next: SearchBuilderState = { ...state, tokens: state.tokens.map((t) => (t.id === state.editingId ? updated : t)) }
     next = rememberRecent(next, options, type, asArray(value))
     next = { ...resetDraft(next), query: '' }
-    // The original built this sentence *after* `resetDraft()`, so `spokenToken`
-    // reads the post-commit state here, not `state`. That is a deliberate
-    // match, not a nicety: `resetDraft` empties `fetched`, so a value whose
-    // label only exists in a fetched list (e.g. an assignee's name) is no
-    // longer resolvable, and the announcement falls back to the raw value —
-    // same as the chip and `appliedSummary` do when they read it later. That
-    // loss-of-label is a pre-existing wart in the original composable, not
-    // something to fix here; it just has to stay consistent across all three.
+    // Spoken from the post-commit state, exactly what the chip and the applied
+    // summary will read: `rememberRecent` has already copied any fetched value
+    // into `seen`, so the label survives `resetDraft` emptying `fetched`.
     return { state: next, effects: [{ type: 'announce', message: `Filter updated, ${spokenToken(next, options, updated)}.` }] }
   }
   const token = { id: nextTokenId(), type, operator, value } as Token
   let next: SearchBuilderState = { ...state, tokens: [...state.tokens, token] }
   next = rememberRecent(next, options, type, asArray(value))
   next = { ...resetDraft(next), query: '' }
-  // See the comment in the `editingId` branch above: post-reset state on purpose.
+  // Post-commit state on purpose; see the `editingId` branch above.
   return { state: next, effects: [{ type: 'announce', message: `Filter added, ${spokenToken(next, options, token)}.` }] }
 }
 

@@ -343,5 +343,20 @@ const outsideFocus = (t, el) =>
   t.dom.window.close()
 }
 
+// ---- an assignee keeps her name on the chip ----
+{
+  const t = await fresh()
+  t.clickInput(); t.type('assign'); await t.tick()
+  t.key('Enter'); await t.tick()
+  t.key('Enter'); await t.tick(500)          // "is", then the fetch lands
+  t.type('rin'); await t.tick(500)
+  t.key('Enter'); await t.tick(150)
+  const chip = t.chips().find((c) => c.includes('Assignee'))
+  check('R1. the chip shows the label of a fetched value', chip?.includes('Rin Tanaka'), true)
+  check('R2. the announcement agrees', t.live().startsWith('Filter added, Assignee is Rin Tanaka'), true)
+  check('R3. and so does the applied summary', t.applied().includes('Assignee is Rin Tanaka'), true)
+  t.dom.window.close()
+}
+
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)
