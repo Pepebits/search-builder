@@ -32,4 +32,20 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm test
-      - run: npm publish
+      # Idempotent: a tag that matches a version already on npm (e.g. 0.1.0,
+      # published by hand to bootstrap trusted publishing) is a no-op, not a
+      # red run. Also guards against re-pushing a tag.
+      - id: check
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "$VERSION" != "${GITHUB_REF_NAME#v}" ]; then
+            echo "tag $GITHUB_REF_NAME does not match package.json version $VERSION" >&2; exit 1
+          fi
+          if npm view "search-builder@$VERSION" version >/dev/null 2>&1; then
+            echo "search-builder@$VERSION is already on npm; nothing to publish"
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.check.outputs.publish == 'true'
+        run: npm publish
