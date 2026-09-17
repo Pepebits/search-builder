@@ -358,5 +358,17 @@ const outsideFocus = (t, el) =>
   t.dom.window.close()
 }
 
+// ---- the matched part of a label is marked ----
+{
+  const t = await fresh()
+  t.clickInput(); t.type('mile'); await t.tick()
+  const hits = [...t.d.querySelectorAll("[role=option] [data-fs='hit']")].map((h) => h.textContent)
+  check('T1. the typed text is marked inside the matching option', hits, ['Mile'])
+  check('T2. the free-text row is left alone', t.d.querySelector("[role=option][data-kind='text'] [data-fs='hit']"), null)
+  t.type(''); await t.tick()
+  check('T3. nothing is marked with an empty query', t.d.querySelectorAll("[data-fs='hit']").length, 0)
+  t.dom.window.close()
+}
+
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)

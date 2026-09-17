@@ -192,6 +192,8 @@ button[data-fs='value'] > span { overflow: hidden; text-overflow: ellipsis; whit
 }
 img.fs-av { object-fit: cover; }
 .fs-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The part of a label that matched what was typed. */
+[data-fs='hit'] { font-weight: 600; color: var(--fs-accent-ink); }
 /* The handle sits next to the name, where the eye already is. */
 .fs-sub {
   font-family: var(--fs-mono); font-size: 12px; color: var(--fs-ink-3); padding: 0;

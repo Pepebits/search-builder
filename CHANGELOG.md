@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file. The format foll
 
 ## [Unreleased]
 
+### Added
+
+- `matchSegments(text, query)` in the core: a label split around the part that matched what was
+  typed. Both demos wrap that part in a `data-fs="hit"` span; the plain stylesheet emphasises it.
+
 ### Changed
 
 - Special values come in two kinds. Wildcards (`special: true`, None / Any) behave as before;

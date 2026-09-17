@@ -13,6 +13,7 @@
  */
 import { computed, toRef } from 'vue'
 import { useSearchBuilder } from '../vue/index.ts'
+import { matchSegments } from '../core/index.ts'
 import { toneHue } from '../core/index.ts'
 
 const props = defineProps({
@@ -44,7 +45,7 @@ const search = useSearchBuilder({
 })
 
 const {
-  stage, indexedGroups, status, placeholder, appliedSummary, announcement, canApply,
+  query, stage, indexedGroups, status, placeholder, appliedSummary, announcement, canApply,
   draftDef, draftOperator, draftValues, isMultiSelect, isChosen, editingId,
   focusInput, tokenLabel, hasOperatorChoice, chipOperator, chipValues, operatorText,
   getRootProps, getLabelProps, getInputProps, getFieldsetProps,
@@ -235,9 +236,13 @@ const AVATAR =
               :style="{ '--fs-tone-h': toneHue(option.tone ?? option.payload) }"
               aria-hidden="true"
             >{{ option.initials }}</span>
-            <span class="truncate">{{ option.label }}</span>
+            <!-- The part of the label that matched what was typed is emphasised, so a long list explains itself. -->
+            <span class="truncate">
+              <template v-if="option.kind === 'text' || option.id === 'v:typed'">{{ option.label }}</template>
+              <template v-else><span v-for="(seg, i) in matchSegments(option.label, query)" :key="i" :data-fs="seg.hit ? 'hit' : null" :class="seg.hit ? 'font-semibold text-accent-ink' : null">{{ seg.text }}</span></template>
+            </span>
             <!-- The handle sits next to the name, where the eye already is. -->
-            <span v-if="option.sub" class="truncate font-mono text-[12px] text-ink-3">{{ option.sub }}</span>
+            <span v-if="option.sub" class="truncate font-mono text-[12px] text-ink-3"><span v-for="(seg, i) in matchSegments(option.sub, query)" :key="i" :data-fs="seg.hit ? 'hit' : null" :class="seg.hit ? 'font-semibold text-accent-ink' : null">{{ seg.text }}</span></span>
             <span v-if="option.hint" class="ml-auto font-mono text-[11.5px] text-ink-3">{{ option.hint }}</span>
             <!-- Trailing, like a menu: the left edge stays aligned whether or not a row is chosen. -->
             <span

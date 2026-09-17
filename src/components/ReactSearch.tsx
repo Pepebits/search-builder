@@ -9,7 +9,7 @@
  * attributes the prop getters already set, same as the headless demo.
  */
 import type { CSSProperties } from 'react'
-import { toneHue } from '../core/index.ts'
+import { toneHue, matchSegments } from '../core/index.ts'
 import type { FilterDef, IndexedOption, Token } from '../core/index.ts'
 import { useSearchBuilder } from '../react/index.ts'
 // The proof this component needs no Tailwind and no Vue: the same design
@@ -45,6 +45,13 @@ function OptionLead ({ option }: { option: IndexedOption }) {
     )
   }
   return null
+}
+
+/** The label with the part that matched what was typed wrapped in a data-fs="hit" span. */
+function emphasise (text: string, query: string) {
+  return matchSegments(text, query).map((seg, i) =>
+    seg.hit ? <span key={i} data-fs="hit">{seg.text}</span> : <span key={i}>{seg.text}</span>
+  )
 }
 
 export function ReactSearch ({
@@ -103,8 +110,8 @@ export function ReactSearch ({
               {group.options.map((option) => (
                 <span {...s.getOptionProps(option)} key={option.id}>
                   <OptionLead option={option} />
-                  <span className="fs-name">{option.label}</span>
-                  {option.sub && <span className="fs-sub">{option.sub}</span>}
+                  <span className="fs-name">{emphasise(option.label, option.kind === 'text' || option.id === 'v:typed' ? '' : s.query)}</span>
+                  {option.sub && <span className="fs-sub">{emphasise(option.sub, s.query)}</span>}
                   {option.hint && <span className="fs-hint-x">{option.hint}</span>}
                   {s.isMultiSelect && (
                     <span className="fs-check" aria-hidden="true">{s.isChosen(option) ? '✓' : ''}</span>
