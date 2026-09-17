@@ -1,5 +1,5 @@
 {
-  "name": "search-builder",
+  "name": "@pepebits/search-builder",
   "version": "0.1.0",
   "description": "Headless tools for building advanced search experiences",
   "keywords": [

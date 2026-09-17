@@ -23,16 +23,16 @@ the plain stylesheet that ships alongside it or none at all.
 ## Install
 
 ```
-npm install search-builder
+npm install @pepebits/search-builder
 ```
 
 Plus whichever peer the entry you use needs — all optional, so installing the core alone pulls in
 nothing else:
 
 ```
-npm install vue                # for search-builder/vue
-npm install react react-dom    # for search-builder/react
-npm install flex-url           # for search-builder/apiable
+npm install vue                # for @pepebits/search-builder/vue
+npm install react react-dom    # for @pepebits/search-builder/react
+npm install flex-url           # for @pepebits/search-builder/apiable
 ```
 
 Requires Node 18+ at build time (ESM, `exports` map with subpaths).
@@ -44,8 +44,8 @@ Requires Node 18+ at build time (ESM, `exports` map with subpaths).
 ```vue
 <script setup>
 import { computed } from 'vue'
-import { useSearchBuilder } from 'search-builder/vue'
-import 'search-builder/styles.css'
+import { useSearchBuilder } from '@pepebits/search-builder/vue'
+import '@pepebits/search-builder/styles.css'
 
 const props = defineProps({ filters: { type: Array, required: true } })
 const tokens = defineModel({ type: Array, default: () => [] })
@@ -82,8 +82,8 @@ no stylesheet, and it passes the same accessibility suite as the Tailwind bar
 ### React
 
 ```tsx
-import { useSearchBuilder } from 'search-builder/react'
-import 'search-builder/styles.css'
+import { useSearchBuilder } from '@pepebits/search-builder/react'
+import '@pepebits/search-builder/styles.css'
 
 function Search ({ filters, tokens, onTokensChange }) {
   const s = useSearchBuilder({ filters, tokens, onTokensChange, label: 'Search issues' })
@@ -118,10 +118,10 @@ The full version, with operators, values and remove buttons, is
 
 ### Bring your own CSS
 
-Both quick starts above import `search-builder/styles.css` — the `--fs-*` design tokens plus a
+Both quick starts above import `@pepebits/search-builder/styles.css` — the `--fs-*` design tokens plus a
 plain stylesheet, every selector an attribute selector. Drop that import for the fully unstyled
 shape (the [headless demo](https://pepebits.github.io/search-builder/headless.html) does exactly
-that); `search-builder/tokens.css` alone gets you just the palette to re-theme.
+that); `@pepebits/search-builder/tokens.css` alone gets you just the palette to re-theme.
 
 Either way, nothing is keyed off a class name — the contract is these attributes, and the test
 suites are written against them, not against any markup:
@@ -183,17 +183,17 @@ type Token =
 
 All of the above — plus `Stage`, `Option`, `OptionGroup`, `SearchBuilderOptions`,
 `SearchBuilderStore` and the rest of the getter/action surface — are exported as types from
-`search-builder` (the root entry), so `search-builder/vue` and `search-builder/react` never need a
+`@pepebits/search-builder` (the root entry), so `@pepebits/search-builder/vue` and `@pepebits/search-builder/react` never need a
 separate `@types` package.
 
-## `search-builder/apiable`
+## `@pepebits/search-builder/apiable`
 
 Tokens ↔ a [`flex-url`](https://www.npmjs.com/package/flex-url) query string — the Laravel Apiable
 grammar. Nothing here hand-builds a URL, and this is the only entry that touches `flex-url`; the
 core and the adapters know nothing about it.
 
 ```ts
-import { createApiable } from 'search-builder/apiable'
+import { createApiable } from '@pepebits/search-builder/apiable'
 
 const apiable = createApiable({
   filters: FILTERS,        // FilterDef[]

@@ -77,7 +77,7 @@ console.log(`  npm pack: ${since(t0)}`)
 /* --------------------------------------------------------------------- */
 
 const FILTERS_TS = `
-import type { FilterDef } from 'search-builder'
+import type { FilterDef } from '@pepebits/search-builder'
 
 export const FILTERS: FilterDef[] = [
   { key: 'status', label: 'Status', operators: [{ value: 'equal', symbol: '=', description: 'is' }],
@@ -99,9 +99,9 @@ const INDEX_HTML = (entry) => `<!doctype html>
 
 const VUE_MAIN_TS = `
 import { createApp, h } from 'vue'
-import { useSearchBuilder } from 'search-builder/vue'
-import { createApiable } from 'search-builder/apiable'
-import 'search-builder/styles.css'
+import { useSearchBuilder } from '@pepebits/search-builder/vue'
+import { createApiable } from '@pepebits/search-builder/apiable'
+import '@pepebits/search-builder/styles.css'
 import { FILTERS } from './filters'
 
 const apiable = createApiable({ filters: FILTERS, path: '/api/items' })
@@ -132,9 +132,9 @@ createApp(App).mount('#app')
 
 const REACT_MAIN_TSX = `
 import { createRoot } from 'react-dom/client'
-import { useSearchBuilder } from 'search-builder/react'
-import { createApiable } from 'search-builder/apiable'
-import 'search-builder/styles.css'
+import { useSearchBuilder } from '@pepebits/search-builder/react'
+import { createApiable } from '@pepebits/search-builder/apiable'
+import '@pepebits/search-builder/styles.css'
 import { FILTERS } from './filters'
 
 const apiable = createApiable({ filters: FILTERS, path: '/api/items' })
@@ -203,7 +203,7 @@ await writeScratchApp(vueDir, {
     type: 'module',
     scripts: { build: 'vite build' },
     dependencies: {
-      'search-builder': `file:../${tarball}`,
+      '@pepebits/search-builder': `file:../${tarball}`,
       vue: '^3.5.13',
       'flex-url': '^3.1.0'
     },
@@ -231,7 +231,7 @@ await writeScratchApp(reactDir, {
     type: 'module',
     scripts: { build: 'vite build' },
     dependencies: {
-      'search-builder': `file:../${tarball}`,
+      '@pepebits/search-builder': `file:../${tarball}`,
       react: '^18.3.1',
       'react-dom': '^18.3.1',
       'flex-url': '^3.1.0'

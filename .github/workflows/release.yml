@@ -1,4 +1,4 @@
-# Publishes `search-builder` on a version tag, after the full suite passes.
+# Publishes `@pepebits/search-builder` on a version tag, after the full suite passes.
 #
 # No NODE_AUTH_TOKEN secret here on purpose: the package is published once
 # locally first (`npm publish`, by a maintainer, outside CI), and from then
@@ -41,8 +41,8 @@ jobs:
           if [ "$VERSION" != "${GITHUB_REF_NAME#v}" ]; then
             echo "tag $GITHUB_REF_NAME does not match package.json version $VERSION" >&2; exit 1
           fi
-          if npm view "search-builder@$VERSION" version >/dev/null 2>&1; then
-            echo "search-builder@$VERSION is already on npm; nothing to publish"
+          if npm view "@pepebits/search-builder@$VERSION" version >/dev/null 2>&1; then
+            echo "@pepebits/search-builder@$VERSION is already on npm; nothing to publish"
             echo "publish=false" >> "$GITHUB_OUTPUT"
           else
             echo "publish=true" >> "$GITHUB_OUTPUT"
