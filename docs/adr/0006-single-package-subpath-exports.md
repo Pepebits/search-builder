@@ -12,15 +12,15 @@ plus a subpath export isolates it just as well, with one version number and no w
 
 ## Decision
 
-Publish a single package, `search-builder`, with these entry points:
+Publish a single package, `@pepebits/search-builder`, with these entry points:
 
 | Import | Contents | Peer dependency |
 | --- | --- | --- |
-| `search-builder` | the framework-agnostic core | none |
-| `search-builder/vue` | the Vue adapter | `vue` (optional) |
-| `search-builder/react` | the React adapter | `react` (optional) |
-| `search-builder/apiable` | tokens ↔ flex-url, `schemaFor` | `flex-url` (optional) |
-| `search-builder/styles.css` | design tokens + plain stylesheet | none |
+| `@pepebits/search-builder` | the framework-agnostic core | none |
+| `@pepebits/search-builder/vue` | the Vue adapter | `vue` (optional) |
+| `@pepebits/search-builder/react` | the React adapter | `react` (optional) |
+| `@pepebits/search-builder/apiable` | tokens ↔ flex-url, `schemaFor` | `flex-url` (optional) |
+| `@pepebits/search-builder/styles.css` | design tokens + plain stylesheet | none |
 
 The entries compose: Vue + apiable is `/vue` plus `/apiable`; the apiable entry is pure functions
 over tokens and knows nothing about any framework. Framework-specific conveniences that need

@@ -1,8 +1,9 @@
 # Plan — from a Vue composable to a framework-agnostic headless package
 
 **Name:** `search-builder` — *Headless tools for building advanced search experiences.*
-Published unscoped on npm as `search-builder` from the `Pepebits` GitHub organisation
-(https://github.com/Pepebits/search-builder), decided 2026-09-17.
+Repo https://github.com/Pepebits/search-builder; npm package `@pepebits/search-builder` (published
+0.1.0 on 2026-09-17). The unscoped name is an npm placeholder left by a package unpublished in 2021
+and cannot be reused by another account; `searchbuilder` is blocked as too similar.
 
 Status: approved 2026-09-16. Owner: Daniel. Decisions are recorded as ADRs in `docs/adr/`;
 each phase has a hand-off in `docs/handoff/`.
@@ -34,7 +35,7 @@ optional peer dependency — it is the apiable URL boundary, not part of the com
 | 1 | TypeScript core (`src/core/`) with no framework imports; Vue adapter (`src/vue/`) exposing the **same public API** the composable has today; the old composable path removed and imports updated; `tests/core.mjs` unit suite without DOM | all five suites green; the two demos unchanged in behaviour |
 | 2 | React adapter (`src/react/`) + a React demo styled with the plain stylesheet, a Playwright suite driving it (parametrised copy of `tests/headless.mjs`), and the demo site as a Vite multi-page build (styled Vue, headless Vue, React) deployable to GitHub Pages | React suite green with the same assertions as the Vue headless suite; `npm run build` produces the three pages |
 | 3 | Folded into Phase 4 (2026-09-17): the apiable bridge becomes `src/apiable/index.ts`, a factory with no demo data; the consumer README replaces the docs restructure for now | — |
-| 4 | Packaging as `search-builder` 0.1.0: library build (`dist-lib`) with `d.ts`, entry points per ADR-0006, rename to `SearchBuilder`/`useSearchBuilder`/`createSearchBuilder`, consumer README, CHANGELOG, `ci.yml` + `release.yml` (trusted publishing) | `npm test` includes `test:pack`: the tarball installs and runs in a scratch Vue app and a scratch React app, types resolve |
+| 4 | Packaging as `@pepebits/search-builder` 0.1.0: library build (`dist-lib`) with `d.ts`, entry points per ADR-0006, rename to `SearchBuilder`/`useSearchBuilder`/`createSearchBuilder`, consumer README, CHANGELOG, `ci.yml` + `release.yml` (trusted publishing) | `npm test` includes `test:pack`: the tarball installs and runs in a scratch Vue app and a scratch React app, types resolve |
 
 Phase 1 is the one that decides everything else. Phases 2–4 are mechanical once the core exists.
 

@@ -40,7 +40,7 @@ docs/
 `src/composables/` is removed in Phase 1; its three importers switch to `src/vue`.
 
 Phase 4 (as amended by ADR-0006) maps each `src/<role>/` folder to an entry point of one package
-(`search-builder`, `/vue`, `/react`, `/apiable`, `/styles.css`); no workspaces. The
+(`@pepebits/search-builder`, `/vue`, `/react`, `/apiable`, `/styles.css`); no workspaces. The
 folder split above is what makes that mapping one line per entry.
 
 ## Consequences
