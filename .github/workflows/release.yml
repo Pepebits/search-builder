@@ -1,0 +1,35 @@
+# Publishes `search-builder` on a version tag, after the full suite passes.
+#
+# No NODE_AUTH_TOKEN secret here on purpose: the package is published once
+# locally first (`npm publish`, by a maintainer, outside CI), and from then
+# on npm's trusted publishing (OIDC, via `id-token: write` below) is what
+# authenticates this workflow — configured on npmjs.com against this repo
+# and this workflow file after that first publish. Until that one-time setup
+# is done, this job's `npm publish` step will fail with no token configured.
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+      - run: npm publish
