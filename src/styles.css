@@ -1,0 +1,117 @@
+/* Demo pages only: page furniture and the shared nav. The bar's own styling lives in
+   the component (Tailwind) or in styles/filtered-search.css (plain CSS). */
+
+* { box-sizing: border-box; }
+
+/* The tiny nav shared by all three demo pages (index.html, headless.html,
+   react.html) — relative links, so it works under a base path too. */
+.site-nav {
+  display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center;
+  max-width: 1000px; margin: 0 auto; padding: 16px 20px 0;
+  font-family: var(--fs-mono); font-size: 12px; letter-spacing: .02em;
+}
+.site-nav a {
+  color: var(--fs-ink-3); text-decoration: none; padding: 3px 0; border-bottom: 2px solid transparent;
+}
+.site-nav a:hover { color: var(--fs-ink); }
+.site-nav a[aria-current='page'] { color: var(--fs-ink); border-bottom-color: var(--fs-accent); }
+
+body {
+  margin: 0;
+  background: var(--fs-bg);
+  color: var(--fs-ink);
+  font-family: var(--fs-sans);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding-block: 48px 80px;
+  padding-left: 20px;
+  padding-right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.eyebrow {
+  margin: 0 0 10px;
+  font-family: var(--fs-mono);
+  font-size: 11px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--fs-ink-3);
+}
+
+h1 { margin: 0; font-size: clamp(32px, 5vw, 46px); line-height: 1.05; letter-spacing: -.02em; }
+
+.workbench {
+  background: var(--fs-surface);
+  border: 1px solid var(--fs-line);
+  border-radius: 8px;
+  box-shadow: var(--fs-shadow);
+}
+
+/* Aligned by the top edge: the bar's first row and the select are the same height (42px),
+   so they read as one row of controls even though the bar carries a hint underneath. */
+.wb-head { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; padding: 16px 16px 0; }
+.wb-search { flex: 1 1 420px; min-width: 0; }
+.wb-sort { display: flex; align-items: center; gap: 10px; }
+.wb-sort label {
+  font-family: var(--fs-mono); font-size: 11px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--fs-ink-3);
+}
+.wb-sort select {
+  font: inherit; font-size: 14px; color: var(--fs-ink); min-height: 42px; padding: 9px 10px;
+  background: var(--fs-surface-3); border: 1px solid var(--fs-line-strong); border-radius: 6px;
+}
+
+.compiled {
+  display: flex; align-items: center; gap: 12px; margin: 16px 0 0; padding: 10px 16px;
+  background: var(--fs-surface-3);
+  border-top: 1px solid var(--fs-line); border-bottom: 1px solid var(--fs-line);
+}
+.compiled .lb {
+  flex: none; font-family: var(--fs-mono); font-size: 10.5px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--fs-ink-3);
+}
+.compiled code {
+  font-family: var(--fs-mono); font-size: 12.5px; color: var(--fs-ink-2);
+  white-space: nowrap; overflow-x: auto; display: block;
+}
+
+.res-head {
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  margin: 0; padding: 12px 16px 8px;
+  font-family: var(--fs-mono); font-size: 13px; color: var(--fs-ink-3);
+}
+
+.empty { padding: 34px 16px 40px; text-align: center; color: var(--fs-ink-2); }
+.empty p { max-width: 44ch; margin: 0 auto 14px; }
+.empty button {
+  font: inherit; font-size: 13px; background: var(--fs-accent); color: var(--fs-surface);
+  border: 0; border-radius: 5px; padding: 8px 14px; cursor: pointer;
+}
+
+/*
+ * Scoped to what this page owns, deliberately.
+ *
+ * Tailwind's utilities live in `@layer utilities`, and unlayered CSS beats any
+ * layered rule no matter the specificity. A bare `:focus-visible {}` here would
+ * therefore override the component's own focus utilities — including the
+ * `outline-none` that keeps the field from drawing a second ring inside the
+ * bar's. Page styles stay on page elements.
+ */
+#issue-sort:focus-visible,
+.empty button:focus-visible {
+  outline: 2px solid var(--fs-accent); outline-offset: 2px; border-radius: 3px;
+}
+
+@media (max-width: 560px) {
+  .wb-sort { width: 100%; }
+  .wb-sort select { flex: 1; }
+  .compiled { flex-direction: column; align-items: flex-start; gap: 5px; }
+  .compiled code { max-width: 100%; }
+}
