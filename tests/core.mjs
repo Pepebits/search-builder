@@ -289,5 +289,24 @@ function pick (store, kind, payload) {
     early?.options.map((o) => [o.label, o.initials]), [['Rin Tanaka', 'RT']])
 }
 
+// ---- derived groups are memoised on their inputs, not on state identity ----
+{
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t18' })
+  store.actions.open()
+  const before = groups(store.getState(), store.getOptions())
+  store.actions.move(1)                                        // activeIndex only
+  check('P6. moving the highlight keeps the same groups object', groups(store.getState(), store.getOptions()) === before, true)
+  store.setOptions({ resultCount: 42 })                        // an option the list never reads
+  check('P7. a resultCount update keeps it too', groups(store.getState(), store.getOptions()) === before, true)
+  await tick(); await tick()                                   // let any announcement land
+  check('P8. and so does an announcement', groups(store.getState(), store.getOptions()) === before, true)
+  store.actions.setQuery('mile')                               // an input it does read
+  check('P9. typing produces a new list', groups(store.getState(), store.getOptions()) !== before, true)
+  const other = createSearchBuilder({ filters: FILTERS.slice(0, 2), id: 'fs-t19' })
+  other.actions.open()
+  groups(other.getState(), other.getOptions())
+  check('P10. a second store does not evict the first', groups(store.getState(), store.getOptions()) === groups(store.getState(), store.getOptions()), true)
+}
+
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)

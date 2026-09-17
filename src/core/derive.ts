@@ -74,8 +74,38 @@ export const usedKeys = (state: SearchBuilderState, options: SearchBuilderOption
 
 const matches = (item: Value, text: string): boolean => !text || item.label.toLowerCase().includes(text)
 
-/** Memoised on the identity of (state, options.filters) — see the hand-off. */
-const groupsCache = new WeakMap<SearchBuilderState, { filters: FilterDef[]; result: OptionGroup[] }>()
+/**
+ * A small memo keyed on the inputs a computation actually reads, compared by
+ * identity, rather than on the state object itself: state is replaced on every
+ * commit, including ones that cannot change the suggestion list (an
+ * announcement, `activeIndex`, a `resultCount` update), and those must not
+ * throw the previous result away. A handful of entries covers several stores
+ * sharing the module without one evicting another's result on every call.
+ */
+function memo<T> (size = 8): (deps: unknown[], compute: () => T) => T {
+  const entries: Array<{ deps: unknown[], result: T }> = []
+  return (deps, compute) => {
+    const hit = entries.findIndex((e) => e.deps.length === deps.length && e.deps.every((d, i) => d === deps[i]))
+    if (hit !== -1) {
+      const [entry] = entries.splice(hit, 1)
+      entries.unshift(entry)
+      return entry.result
+    }
+    const result = compute()
+    entries.unshift({ deps, result })
+    if (entries.length > size) entries.pop()
+    return result
+  }
+}
+
+/** Everything `computeGroups` reads. Keep in step with it. */
+const groupDeps = (state: SearchBuilderState, options: SearchBuilderOptions): unknown[] => [
+  options.filters, state.stage, state.query, state.tokens, state.editingId,
+  state.draftKey, state.draftOperator, state.fetched, state.recents, state.seen
+]
+
+const groupsMemo = memo<OptionGroup[]>()
+const flatMemo = memo<Option[]>()
 
 function computeGroups (state: SearchBuilderState, options: SearchBuilderOptions): OptionGroup[] {
   const text = state.query.trim().toLowerCase()
@@ -165,22 +195,12 @@ function computeGroups (state: SearchBuilderState, options: SearchBuilderOptions
  * so the section headings are not lost to screen readers.
  */
 export function groups (state: SearchBuilderState, options: SearchBuilderOptions): OptionGroup[] {
-  const cached = groupsCache.get(state)
-  if (cached && cached.filters === options.filters) return cached.result
-  const result = computeGroups(state, options)
-  groupsCache.set(state, { filters: options.filters, result })
-  return result
+  return groupsMemo(groupDeps(state, options), () => computeGroups(state, options))
 }
-
-const flatCache = new WeakMap<SearchBuilderState, { filters: FilterDef[]; result: Option[] }>()
 
 /** Flat view for index maths; option ids come from this order. */
 export function flatOptions (state: SearchBuilderState, options: SearchBuilderOptions): Option[] {
-  const cached = flatCache.get(state)
-  if (cached && cached.filters === options.filters) return cached.result
-  const result = groups(state, options).flatMap((g) => g.options)
-  flatCache.set(state, { filters: options.filters, result })
-  return result
+  return flatMemo(groupDeps(state, options), () => groups(state, options).flatMap((g) => g.options))
 }
 
 /**
