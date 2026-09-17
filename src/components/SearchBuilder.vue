@@ -199,7 +199,7 @@ const AVATAR =
       <!-- Never removed from the DOM: aria-controls has to resolve while closed. -->
       <ul
         v-bind="getListboxProps()"
-        class="absolute top-[calc(100%+6px)] left-0 z-20 m-0 max-h-[300px] w-[min(100%,520px)] list-none overflow-y-auto rounded-md border border-line-strong bg-surface p-[5px] shadow-pop state-busy:opacity-70"
+        class="absolute top-[calc(100%+6px)] left-0 z-20 m-0 max-h-[300px] w-[min(100%,520px)] list-none overflow-y-auto rounded-md border border-line-strong bg-surface p-[5px] shadow-pop"
       >
         <li
           v-for="group in indexedGroups"
