@@ -1,6 +1,10 @@
 // The flex-url boundary: tokens -> wire -> tokens. No DOM needed.
-import { requestParams, requestUri, schemaFor, tokensToUrl, urlToTokens } from '../src/lib/apiable.js'
-import { PLAIN, daysAgo } from '../src/data/filters.js'
+import { createApiable } from '../src/apiable/index.ts'
+import { FILTERS, PLAIN, daysAgo } from '../src/data/filters.js'
+import { SORTS } from '../src/data/issues.js'
+
+const { tokensToUrl, urlToTokens, requestUri, requestParams, schema } =
+  createApiable({ filters: FILTERS, path: '/api/v1/issues', sorts: SORTS, resource: 'issues' })
 
 let pass = 0, fail = 0
 const check = (name, got, want) => {
@@ -98,16 +102,16 @@ check('a plain entry with one value comes back as equal',
 
 // --- the schema a backend would publish, derived from the same definitions ---
 {
-  const schema = schemaFor()
-  check('schema names the endpoint', [schema.resource, schema.path], ['issues', '/api/v1/issues'])
+  const s = schema()
+  check('schema names the endpoint', [s.resource, s.path], ['issues', '/api/v1/issues'])
   check('a closed value set is listed under its wire attribute',
-    schema.filters.status, { operators: ['equal'], values: ['opened', 'closed'] })
+    s.filters.status, { operators: ['equal'], values: ['opened', 'closed'] })
   check('the plain entry is reported as equal, once',
-    schema.filters.labels.operators, ['equal'])
-  check('negation is part of the contract', schema.filters.title.operators, ['like', 'not_like'])
-  check('a free-value filter publishes no value set', 'values' in schema.filters.title, false)
-  check('sorts are wire attributes, deduplicated', schema.sorts, ['updated_at', 'created_at', 'comments_count'])
-  check('the default sort is the first one, signed', schema.defaultSort, '-updated_at')
+    s.filters.labels.operators, ['equal'])
+  check('negation is part of the contract', s.filters.title.operators, ['like', 'not_like'])
+  check('a free-value filter publishes no value set', 'values' in s.filters.title, false)
+  check('sorts are wire attributes, deduplicated', s.sorts, ['updated_at', 'created_at', 'comments_count'])
+  check('the default sort is the first one, signed', s.defaultSort, '-updated_at')
   check('params mirror the bracket structure',
     requestParams([{ id: '1', type: 'title', operator: 'not_like', value: 'focus' }], { sort: 'updated_desc' }),
     { filter: { title: { not_like: 'focus' } }, sort: '-updated_at' })
