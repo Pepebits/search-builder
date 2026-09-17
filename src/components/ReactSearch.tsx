@@ -39,7 +39,7 @@ function OptionLead ({ option }: { option: IndexedOption }) {
   if (option.avatar) return <img className="fs-av" src={option.avatar} alt="" />
   if (option.initials) {
     return (
-      <span className="fs-av" style={{ '--fs-tone-h': toneHue(option.payload) } as ToneStyle} aria-hidden="true">
+      <span className="fs-av" style={{ '--fs-tone-h': toneHue(option.tone ?? option.payload) } as ToneStyle} aria-hidden="true">
         {option.initials}
       </span>
     )

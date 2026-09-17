@@ -418,10 +418,9 @@ async function fresh () {
       listWidth: box.getBoundingClientRect().width,
       barWidth: bar.getBoundingClientRect().width,
       people: [...box.querySelectorAll('[role=option]')].map((o) => {
+        // A person row is avatar, name, handle, check — in that order.
         const kids = [...o.children]
-        const avatar = kids[0]
-        const name = kids.find((k) => k.textContent.trim().startsWith(avatar.textContent.trim()) === false && !k.textContent.startsWith('@') && k !== avatar)
-        const sub = kids.find((k) => k.textContent.startsWith('@'))
+        const [avatar, name, sub] = kids
         const check = kids[kids.length - 1]
         const cs = getComputedStyle(avatar)
         return {
@@ -437,7 +436,10 @@ async function fresh () {
   })
   check('AA1. the list is a menu, narrower than the bar', rows.listWidth <= 520 && rows.listWidth < rows.barWidth, true)
   check('AA2. avatars are 22px', rows.people.every((p) => p.avatarSize === '22px'), true)
-  check('AA3. no two neighbours share a tint', new Set(rows.people.map((p) => p.avatarBg)).size, rows.people.length)
+  // Me is the current user, Nadia, and is tinted like her on purpose; the other four all differ.
+  check('AA3. Me shares the current user\'s tint and everyone else differs',
+    [rows.people[0].avatarBg === rows.people[1].avatarBg, new Set(rows.people.slice(1).map((p) => p.avatarBg)).size],
+    [true, rows.people.length - 1])
   check('AA4. the handle sits right after the name', rows.people.every((p) => p.subFollowsName), true)
   check('AA5. the handle is not pushed to the far edge', rows.people.every((p) => p.subFlushRight === false), true)
   check('AA6. the check is the last, right-aligned cell', rows.people.every((p) => p.checkIsLast && p.checkAtRight), true)

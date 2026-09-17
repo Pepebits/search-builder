@@ -232,7 +232,7 @@ const AVATAR =
             <span
               v-else-if="option.initials"
               :class="AVATAR"
-              :style="{ '--fs-tone-h': toneHue(option.payload) }"
+              :style="{ '--fs-tone-h': toneHue(option.tone ?? option.payload) }"
               aria-hidden="true"
             >{{ option.initials }}</span>
             <span class="truncate">{{ option.label }}</span>

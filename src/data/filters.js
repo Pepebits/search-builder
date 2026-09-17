@@ -28,7 +28,8 @@ export const PLAIN = 'in'
 /** Values that mean "unset" or "set to anything". */
 export const NONE = { value: 'None', label: 'None', special: true }
 export const ANY = { value: 'Any', label: 'Any', special: true }
-export const ME = { value: 'Me', label: 'Me', special: true }
+/** Not a wildcard: a person the list does not carry, pinned to the front of it. */
+export const ME = { value: 'Me', label: 'Me', sub: 'you · @nadia.okonkwo', initials: 'NO', tone: 'nadia.okonkwo', pinned: true }
 
 export const CURRENT_USER = 'nadia.okonkwo'
 
