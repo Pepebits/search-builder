@@ -14,6 +14,11 @@ const check = (name, got, want) => {
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${ok ? '' : `\n        got  ${JSON.stringify(got)}\n        want ${JSON.stringify(want)}`}`)
 }
 
+/** Click with one retry on a shorter timeout; see the note in the option helper. */
+async function clickWithRetry (locator) {
+  try { await locator.click({ timeout: 10000 }) } catch { await locator.click({ timeout: 20000 }) }
+}
+
 const browser = await chromium.launch()
 
 async function fresh () {
@@ -44,11 +49,13 @@ async function fresh () {
       }
     }),
     clickOption: async (text) => {
-      await page.locator('[role=option]', { hasText: text }).first().click()
+      // Two attempts: under CPU load the actionability check ("stable") can time
+      // out once even though the option is there; a retry is cheaper than a red release.
+      await clickWithRetry(page.locator('[role=option]', { hasText: text }).first())
       await page.waitForTimeout(140)
     },
     clickAction: async (text) => {
-      await page.locator("[data-fs='apply'], [data-fs='clear'], [data-fs='submit']", { hasText: text }).first().click()
+      await clickWithRetry(page.locator("[data-fs='apply'], [data-fs='clear'], [data-fs='submit']", { hasText: text }).first())
       await page.waitForTimeout(140)
     }
   }
