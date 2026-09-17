@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file. The format foll
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/) — pre-1.0, so the public API can still move.
 
+## [Unreleased]
+
+### Changed
+
+- Special values come in two kinds. Wildcards (`special: true`, None / Any) behave as before;
+  pinned values (`pinned: true`, Me) lead the main group even before an async list returns, are
+  allowed under multi-value operators, and carry across an operator change. Typing now matches a
+  value's `sub` (its @handle) as well as its label, and a `tone` seed lets an avatar take another
+  identity's tint.
+
 ## [0.1.1] — 2026-09-17
 
 ### Fixed

@@ -142,10 +142,15 @@ name — that already says the words.
 
 ### 2.4 Special values
 
-*None*, *Any*, *Me* are values, not operators. Two rules:
+*None*, *Any*, *Me* are values, not operators, and they come in two kinds:
 
-- They are hidden under a multi-value operator: "is any of None, v4.2" is meaningless.
-- They therefore cannot carry across an operator change into a multi-value operator — see §8.
+- **Wildcards** (`special: true` — *None*, *Any*) get their own "Any or none" group, are hidden
+  under a multi-value operator ("is any of None, v4.2" is meaningless), and therefore cannot carry
+  across an operator change into one — see §8.
+- **Pinned values** (`pinned: true` — *Me*) are ordinary members of the list that happen to be
+  known up front: offered first in the main group, before an async list has returned, matched by
+  their `sub` as well as their label, and allowed under multi-value operators. *Me* is a person
+  with an avatar, tinted like the current user through `tone`.
 
 ---
 
@@ -368,7 +373,7 @@ mistake to avoid.
 ```js
 function carryValues (values, operator, def) {
   if (!values.length) return null                     // nothing to carry
-  const specials = new Set((def.specialValues ?? []).map(v => v.value))
+  const specials = new Set((def.specialValues ?? []).filter(v => v.special).map(v => v.value))
   if (operator?.multiple) {
     return values.some(v => specials.has(v)) ? null : [...values]  // None/Any can't join a list
   }

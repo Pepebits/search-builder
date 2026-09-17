@@ -308,5 +308,43 @@ function pick (store, kind, payload) {
   check('P10. a second store does not evict the first', groups(store.getState(), store.getOptions()) === groups(store.getState(), store.getOptions()), true)
 }
 
+// ---- Me is a person, not a wildcard ----
+{
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t20' })
+  pick(store, 'filter', 'assignee')
+  pick(store, 'operator', 'equal')
+  let g = groups(store.getState(), store.getOptions())
+  check('Q1. under "is", the wildcards keep their own group', g.find((x) => x.id === 'special')?.options.map((o) => o.label), ['None', 'Any'])
+  check('Q2. and Me leads the people, before the fetch has returned', g.find((x) => x.id === 'all')?.options.map((o) => o.label), ['Me'])
+  await new Promise((resolve) => setTimeout(resolve, 400))
+  g = groups(store.getState(), store.getOptions())
+  check('Q3. still first once the people arrive', g.find((x) => x.id === 'all')?.options.slice(0, 2).map((o) => o.label), ['Me', 'Nadia Okonkwo'])
+  store.actions.setQuery('nad')
+  await new Promise((resolve) => setTimeout(resolve, 400))
+  g = groups(store.getState(), store.getOptions())
+  check('Q4. typing matches the handle too, so "nad" finds Me and Nadia', flatOptions(store.getState(), store.getOptions()).map((o) => o.label), ['Me', 'Nadia Okonkwo'])
+}
+{
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t21' })
+  pick(store, 'filter', 'assignee')
+  pick(store, 'operator', 'in')
+  await new Promise((resolve) => setTimeout(resolve, 400))
+  const g = groups(store.getState(), store.getOptions())
+  check('Q5. under "is any of" the wildcards are gone but Me stays', [g.some((x) => x.id === 'special'), g.find((x) => x.id === 'all')?.options[0].label], [false, 'Me'])
+  pick(store, 'value', 'Me')
+  pick(store, 'value', 'rin.tanaka')
+  store.actions.applyDraft()
+  const token = store.getState().tokens[0]
+  check('Q6. Me joins a multi-value token', token.value, ['Me', 'rin.tanaka'])
+  check('Q7. and the chip reads it as a person', chipValues(store.getState(), store.getOptions(), token), 'Me, Rin Tanaka')
+  pick(store, 'filter', 'author')
+  const row = flatOptions(store.getState(), store.getOptions()).find((o) => o.payload === 'Me')
+  check('Q8. the row carries the current user\'s tint seed and says who Me is', [row?.tone, row?.sub], ['nadia.okonkwo', 'you · @nadia.okonkwo'])
+  const def = FILTERS.find((f) => f.key === 'assignee')
+  const anyOf = def.operators.find((o) => o.value === 'in')
+  check('Q9. Me carries into a multi-value operator', store.actions.carryValues(['Me'], anyOf, def), ['Me'])
+  check('Q10. None still does not', store.actions.carryValues(['None'], anyOf, def), null)
+}
+
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)

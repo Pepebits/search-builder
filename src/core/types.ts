@@ -10,8 +10,22 @@ export interface Value {
   color?: string
   initials?: string
   avatar?: string
+  /** Secondary text beside the label — an @handle. Typing matches it too. */
   sub?: string
+  /**
+   * A wildcard such as None or Any: offered under "Any or none", hidden under
+   * a multi-value operator ("is any of None, v4.2" means nothing), and never
+   * carried into one when the operator changes.
+   */
   special?: boolean
+  /**
+   * A value that is not in the list but behaves like one of its members — Me
+   * among people. Offered first in the main group, even before an async list
+   * has returned, and allowed under multi-value operators.
+   */
+  pinned?: boolean
+  /** Seed for the avatar tint when it should follow another identity — Me is the current user. */
+  tone?: string
 }
 
 /** An operator a filter offers ("is", "is any of", "contains", …). */
@@ -72,6 +86,8 @@ export interface Option {
   avatar?: string
   sub?: string
   special?: boolean
+  pinned?: boolean
+  tone?: string
   of?: string
 }
 

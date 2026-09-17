@@ -152,7 +152,7 @@ interface FilterDef {
   operators: Operator[]
   values?: Value[]                               // a closed set, offered directly
   fetchValues?: (query: string) => Promise<Value[]>  // an open set, fetched as you type
-  specialValues?: Value[]                        // "None" / "Any" / "Me", offered first
+  specialValues?: Value[]                        // wildcards (special: true) and pinned values (pinned: true)
   repeatable?: boolean                           // can appear as more than one token
   freeValue?: boolean                            // the value stage also accepts typed text
   kind?: string                                  // presentation hint (e.g. "person")
@@ -172,7 +172,10 @@ interface Value {
   color?: string
   initials?: string
   avatar?: string
-  sub?: string
+  sub?: string          // secondary text beside the label; typing matches it too
+  special?: boolean     // a wildcard (None / Any): its own group, hidden under multi-value operators
+  pinned?: boolean      // a known member the list does not carry (Me): offered first, allowed everywhere
+  tone?: string         // avatar tint seed when it should follow another identity
   special?: boolean
 }
 

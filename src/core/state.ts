@@ -61,9 +61,10 @@ export function resetDraft (state: SearchBuilderState): SearchBuilderState {
  */
 export function carryValues (values: string[], operator: Operator | null, def: FilterDef | null): string | string[] | null {
   if (!values.length || !def) return null
-  const specials = new Set((def.specialValues ?? []).map((v) => v.value))
+  const specials = new Set((def.specialValues ?? []).filter((v) => v.special).map((v) => v.value))
   if (operator?.multiple) {
-    // "None"/"Any" are meaningless in a list, so those have to be re-picked.
+    // Wildcards ("None"/"Any") are meaningless in a list, so those have to be
+    // re-picked; a pinned value such as "Me" joins a list like anyone else.
     return values.some((v) => specials.has(v)) ? null : [...values]
   }
   // A single-value operator can only take one; more than that needs a choice.

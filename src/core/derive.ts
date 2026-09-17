@@ -72,7 +72,8 @@ export const usedKeys = (state: SearchBuilderState, options: SearchBuilderOption
   return set
 }
 
-const matches = (item: Value, text: string): boolean => !text || item.label.toLowerCase().includes(text)
+const matches = (item: Value, text: string): boolean =>
+  !text || item.label.toLowerCase().includes(text) || (item.sub?.toLowerCase().includes(text) ?? false)
 
 /**
  * A small memo keyed on the inputs a computation actually reads, compared by
@@ -142,10 +143,14 @@ function computeGroups (state: SearchBuilderState, options: SearchBuilderOptions
     }]
   }
 
-  // "None" and "Any" cannot be combined with the multi-value operators.
+  // Wildcards ("None", "Any") cannot be combined with the multi-value operators;
+  // pinned values ("Me") are ordinary members of the list that happen to be
+  // known up front, so they lead the main group whatever the operator.
   const multi = isMultiSelect(state, options)
-  const specials = multi ? [] : (def.specialValues ?? [])
-  const pool = def.fetchValues ? state.fetched : (def.values ?? [])
+  const wildcards = (def.specialValues ?? []).filter((v) => v.special)
+  const pinned = (def.specialValues ?? []).filter((v) => !v.special)
+  const specials = multi ? [] : wildcards
+  const pool = [...pinned, ...(def.fetchValues ? state.fetched : (def.values ?? []))]
   const taken = new Set(
     state.tokens
       .filter((t) => t.id !== state.editingId)
@@ -154,7 +159,8 @@ function computeGroups (state: SearchBuilderState, options: SearchBuilderOptions
   )
   const toOption = (v: Value): Option => ({
     id: `v:${v.value}`, kind: 'value', label: v.label, payload: v.value,
-    color: v.color, initials: v.initials, avatar: v.avatar, sub: v.sub, special: v.special, of: def.kind
+    color: v.color, initials: v.initials, avatar: v.avatar, sub: v.sub, special: v.special,
+    pinned: v.pinned, tone: v.tone, of: def.kind
   })
   // Look recents up across specials too, or a remembered "None" never resurfaces;
   // and across values seen in earlier fetches, or an async filter never has recents.
