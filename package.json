@@ -1,0 +1,64 @@
+{
+  "name": "search-builder",
+  "version": "0.1.0",
+  "description": "Headless tools for building advanced search experiences",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pepebits/search-builder.git"
+  },
+  "homepage": "https://pepebits.github.io/search-builder/",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit",
+    "test": "npm run typecheck && node tests/url.mjs && node tests/core.mjs && npm run build:test && node tests/interaction.mjs && node tests/browser.mjs && npm run build:headless && node tests/headless.mjs && npm run build:react && node tests/react.mjs",
+    "test:logic": "npm run build:test && node tests/interaction.mjs",
+    "test:browser": "npm run build:test && node tests/browser.mjs",
+    "build:test": "vite build --config vite.test.config.mjs",
+    "test:url": "node tests/url.mjs",
+    "test:core": "node tests/core.mjs",
+    "build:headless": "vite build --config vite.headless.config.mjs",
+    "test:headless": "npm run build:headless && node tests/headless.mjs",
+    "build:react": "vite build --config vite.react.config.mjs",
+    "test:react": "npm run build:react && node tests/react.mjs"
+  },
+  "dependencies": {
+    "vue": "^3.5.13"
+  },
+  "peerDependencies": {
+    "flex-url": "^3.1.0",
+    "react": ">=18",
+    "react-dom": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "flex-url": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "flex-url": "^3.1.0",
+    "jsdom": "^26.1.0",
+    "playwright": "^1.56.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.3",
+    "vite": "^6.0.7",
+    "vue-tsc": "^3.3.11"
+  }
+}
