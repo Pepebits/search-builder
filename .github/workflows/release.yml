@@ -59,5 +59,7 @@ jobs:
           fi
       # Provenance is requested here, not in package.json: it needs a CI OIDC
       # provider, and a maintainer must still be able to publish from a laptop.
+      # Verbose so the OIDC exchange explains itself in the log when it fails;
+      # npm only reports the registry's reason at this level.
       - if: steps.check.outputs.stage == 'true'
-        run: npm stage publish --provenance
+        run: npm stage publish --provenance --loglevel verbose
