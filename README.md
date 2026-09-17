@@ -1,4 +1,4 @@
-# search-builder
+<p align="center"><img src="https://raw.githubusercontent.com/Pepebits/search-builder/main/docs/banner.png" alt="search-builder" width="720"></p>
 
 **Headless tools for building advanced search experiences.**
 

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="search-builder">
+  <style>.ink{stroke:#1c1b1b}@media (prefers-color-scheme:dark){.ink{stroke:#fcf9f8}}</style>
+  <!-- The lens and its handle: search. One path, ink, no fill. -->
+  <path class="ink" d="M108 28a80 80 0 1 1 0 160a80 80 0 1 1 0-160ZM165 165L220 220" fill="none" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Two filter chips inside the lens: the tokens a search is built from. -->
+  <path d="M68 90H104M68 126H136" fill="none" stroke="#ff3e3e" stroke-width="20" stroke-linecap="round"/>
+</svg>
