@@ -1,0 +1,48 @@
+/*
+ * Bring your own CSS. This is every rule headless.html adds on top of the
+ * composable — about fifty lines, written for this page and nothing else.
+ * It only ever targets what the prop getters put in the DOM: data-fs parts,
+ * roles and states. Delete it and the bar still works; it just looks like HTML.
+ */
+[data-fs='root'] { position: relative; font: 15px/1.4 system-ui, sans-serif; color: #111; }
+[data-fs='label'] { display: block; margin-bottom: 6px; font-weight: 600; }
+
+/* The bar: chips, the field and the actions on one wrapping line. */
+[data-fs='bar'] { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px; background: #fff; border: 2px solid #111; cursor: text; }
+[data-fs='bar']:focus-within { outline: 3px solid #ffd500; outline-offset: 2px; }
+[data-fs='input'] { flex: 1 1 160px; min-width: 120px; padding: 6px 4px; border: 0; background: transparent; font: inherit; outline: none; }
+[data-fs='apply'], [data-fs='submit'] { padding: 6px 12px; border: 2px solid #111; background: #fff; font: inherit; cursor: pointer; }
+[data-fs='apply'] { background: #ffd500; font-weight: 600; }
+
+/* Chips: key | operator | value | remove, each its own cell. */
+[data-fs='tokens'] { display: contents; }
+[data-fs='token'] { display: inline-flex; align-items: stretch; border: 1px solid #111; font-size: 13px; }
+[data-fs='token'] > span:first-child { padding: 3px 8px; background: #111; color: #fff; font-weight: 600; }
+[data-fs='token'][data-type='text'] > span:first-child { background: #fff; color: #111; font-weight: 400; font-style: italic; }
+[data-fs='operator'], [data-fs='value'], [data-fs='remove'] { display: inline-flex; align-items: center; padding: 3px 8px; border: 0; border-left: 1px solid #111; background: #fff; font: inherit; }
+[data-fs='token'] button { cursor: pointer; }
+[data-fs='token'] button:hover { background: #ffd500; }
+[data-fs='token'][data-negated] [data-fs='operator'] { background: #111; color: #fff; }
+[data-fs='token'][data-editing] { border-style: dashed; }
+[data-fs='token'][data-pending] { opacity: .7; }
+
+/* The suggestion list. */
+[data-fs='listbox'] { position: absolute; z-index: 10; left: 0; width: min(100%, 520px); max-height: 320px; margin-top: 6px; padding: 4px; overflow: auto; background: #fff; border: 2px solid #111; box-shadow: 6px 6px 0 #111; }
+[data-fs='listbox'][hidden] { display: none; }
+[data-fs='group'] + [data-fs='group'] { margin-top: 4px; padding-top: 4px; border-top: 1px solid #ddd; }
+[data-fs='group'] > b { display: block; padding: 6px 8px 2px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #666; }
+[data-fs='option'] { display: flex; justify-content: space-between; padding: 7px 8px; cursor: pointer; }
+[data-fs='option'][data-active='true'] { background: #111; color: #fff; }
+[data-fs='listbox'][aria-multiselectable='true'] [data-fs='option'][aria-selected='true']::after { content: '\2713'; }
+[data-fs='status'] { margin: 0; padding: 8px; color: #666; }
+
+/* Below the bar: the hint stays visible; the summary and live region are for screen readers. */
+[data-fs='hint'] { margin: 8px 0 0; font-size: 12px; color: #666; }
+[data-fs='applied'], [data-fs='live'] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* Page furniture, not the component: the result list and the CSS viewer. */
+#results { margin: 28px 0 0; padding: 0; list-style: none; border-top: 1px solid #ddd; }
+#results li { padding: 10px 0; border-bottom: 1px solid #ddd; }
+.css-source { margin-top: 32px; }
+.css-source summary { cursor: pointer; font-weight: 600; }
+.css-source pre { margin: 10px 0 0; padding: 14px; overflow: auto; background: #111; color: #eee; font: 12px/1.5 ui-monospace, monospace; }
