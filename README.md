@@ -304,7 +304,8 @@ one always outputs `dist/`, the other always outputs `dist-lib/`, and neither sc
 other's directory.
 
 The first Chromium-based run on a machine needs the browser installed once:
-`npx playwright install chromium`.
+`npx playwright install chromium`. `tests/core.mjs` imports the TypeScript core directly, which
+needs Node 22.6 or newer (type stripping); consumers of the published package only need Node 18.
 
 ### Releasing
 
