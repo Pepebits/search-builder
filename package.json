@@ -2,7 +2,17 @@
   "name": "search-builder",
   "version": "0.1.0",
   "description": "Headless tools for building advanced search experiences",
-  "keywords": ["search", "filter", "combobox", "headless", "vue", "react", "accessibility", "aria", "apiable"],
+  "keywords": [
+    "search",
+    "filter",
+    "combobox",
+    "headless",
+    "vue",
+    "react",
+    "accessibility",
+    "aria",
+    "apiable"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -13,19 +23,42 @@
     "url": "https://github.com/Pepebits/search-builder/issues"
   },
   "type": "module",
-  "files": ["dist-lib", "LICENSE", "README.md", "CHANGELOG.md"],
-  "sideEffects": ["*.css"],
-  "engines": { "node": ">=18" },
+  "files": [
+    "dist-lib",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "sideEffects": [
+    "*.css"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "exports": {
-    ".": { "types": "./dist-lib/types/core/index.d.ts", "import": "./dist-lib/index.js" },
-    "./vue": { "types": "./dist-lib/types/vue/index.d.ts", "import": "./dist-lib/vue.js" },
-    "./react": { "types": "./dist-lib/types/react/index.d.ts", "import": "./dist-lib/react.js" },
-    "./apiable": { "types": "./dist-lib/types/apiable/index.d.ts", "import": "./dist-lib/apiable.js" },
+    ".": {
+      "types": "./dist-lib/types/core/index.d.ts",
+      "import": "./dist-lib/index.js"
+    },
+    "./vue": {
+      "types": "./dist-lib/types/vue/index.d.ts",
+      "import": "./dist-lib/vue.js"
+    },
+    "./react": {
+      "types": "./dist-lib/types/react/index.d.ts",
+      "import": "./dist-lib/react.js"
+    },
+    "./apiable": {
+      "types": "./dist-lib/types/apiable/index.d.ts",
+      "import": "./dist-lib/apiable.js"
+    },
     "./styles.css": "./dist-lib/styles.css",
     "./tokens.css": "./dist-lib/tokens.css",
     "./package.json": "./package.json"
   },
-  "publishConfig": { "access": "public", "provenance": true },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
