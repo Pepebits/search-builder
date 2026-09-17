@@ -1,7 +1,7 @@
 // Mounts the React example on its own, for tests/react.mjs. Same seeded
 // tokens and the same result list as src/headless-entry.js — this is the
 // proof the two adapters agree, not just the two Vue demos.
-import { useEffect, useMemo, useState } from 'react'
+import { StrictMode, useEffect, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ReactSearch } from './components/ReactSearch.tsx'
 import { useSearchBuilder } from './react/index.ts'
@@ -39,7 +39,7 @@ window.__mountInlineFilters = () => {
   const host = document.createElement('div')
   host.id = 'inline-probe'
   document.body.append(host)
-  createRoot(host).render(<InlineFiltersProbe />)
+  createRoot(host).render(<StrictMode><InlineFiltersProbe /></StrictMode>)
 }
 
 const SEED: Token[] = [
@@ -74,4 +74,7 @@ function Demo () {
   )
 }
 
-createRoot(document.getElementById('app')!).render(<Demo />)
+// StrictMode on purpose: a no-op in the production site build, but the test
+// build is a development build (vite.react.config.mjs), so React's double
+// render and mount-unmount-mount of every effect run under the suite.
+createRoot(document.getElementById('app')!).render(<StrictMode><Demo /></StrictMode>)

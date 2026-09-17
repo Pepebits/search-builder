@@ -4,10 +4,13 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  // Production, like the other test builds. React's dev-only warnings (controlled input
-  // without onChange, missing keys) are therefore compiled out of this bundle; the
-  // adapter was checked against a StrictMode dev build by hand in the Phase 2 review.
-  define: { 'process.env.NODE_ENV': '"production"' },
+  // A *development* build, unlike the other test builds: it keeps React's
+  // dev-only warnings (controlled input without onChange, missing keys,
+  // effect leaks) and makes <StrictMode> in react-entry.tsx actually
+  // double-invoke renders and effects. The suite asserts `errors` is empty,
+  // so those warnings fail it.
+  mode: 'development',
+  define: { 'process.env.NODE_ENV': '"development"' },
   build: {
     outDir: '.tmp/react-build',
     emptyOutDir: true,
