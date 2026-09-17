@@ -305,3 +305,25 @@ other's directory.
 
 The first Chromium-based run on a machine needs the browser installed once:
 `npx playwright install chromium`.
+
+### Releasing
+
+Publishing is staged, never direct: CI can put a version on the registry, only a maintainer with
+2FA can make it live.
+
+1. Bump `version` in `package.json`, add the `CHANGELOG.md` entry, commit.
+2. Tag and push: `git tag -a vX.Y.Z -m vX.Y.Z && git push origin main vX.Y.Z`.
+3. The `release` workflow runs the whole suite and, if it passes, `npm stage publish --provenance`
+   through npm trusted publishing. Green means *staged*, not published.
+4. Approve it (prompts for your one-time password), or reject it:
+
+   ```
+   npm stage list @pepebits/search-builder
+   npm stage download <stage-id>     # optional: inspect the exact tarball first
+   npm stage approve <stage-id>
+   ```
+
+   The same buttons exist on the package page at npmjs.com.
+
+A tag whose version is already live is a no-op run. A tag whose version is already *staged* fails
+at the staging step until that stage is approved or rejected.

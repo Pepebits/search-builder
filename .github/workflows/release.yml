@@ -1,11 +1,15 @@
-# Publishes `@pepebits/search-builder` on a version tag, after the full suite passes.
+# Stages `@pepebits/search-builder` on a version tag, after the full suite passes.
 #
-# No NODE_AUTH_TOKEN secret here on purpose: the package is published once
-# locally first (`npm publish`, by a maintainer, outside CI), and from then
-# on npm's trusted publishing (OIDC, via `id-token: write` below) is what
-# authenticates this workflow — configured on npmjs.com against this repo
-# and this workflow file after that first publish. Until that one-time setup
-# is done, this job's `npm publish` step will fail with no token configured.
+# CI never publishes a live version. It runs `npm stage publish`, which puts the
+# version on the registry in a non-public state; a maintainer then approves it
+# with 2FA (`npm stage approve <stage-id>`, or on npmjs.com), which is when it
+# goes live. That keeps a human in front of every publish even if a tag or an
+# action in this workflow were compromised.
+#
+# No NODE_AUTH_TOKEN secret: npm's trusted publishing (OIDC, `id-token: write`)
+# authenticates this workflow. It is configured on npmjs.com against this repo
+# and this file, with direct publishing deliberately left off — staging is the
+# only action it can take.
 name: release
 
 on:
@@ -32,9 +36,12 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm test
-      # Idempotent: a tag that matches a version already on npm (e.g. 0.1.0,
-      # published by hand to bootstrap trusted publishing) is a no-op, not a
-      # red run. Also guards against re-pushing a tag.
+      # Idempotent: a tag that matches a version already live on npm (e.g. 0.1.0,
+      # published by hand to bootstrap trusted publishing) is a no-op, not a red
+      # run. Also guards against a tag that does not match package.json. A
+      # version that is already *staged* is not visible to `npm view`; staging
+      # it again fails with a clear message, and the fix is to approve or reject
+      # the pending stage.
       - id: check
         run: |
           VERSION=$(node -p "require('./package.json').version")
@@ -42,12 +49,12 @@ jobs:
             echo "tag $GITHUB_REF_NAME does not match package.json version $VERSION" >&2; exit 1
           fi
           if npm view "@pepebits/search-builder@$VERSION" version >/dev/null 2>&1; then
-            echo "@pepebits/search-builder@$VERSION is already on npm; nothing to publish"
-            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "@pepebits/search-builder@$VERSION is already live on npm; nothing to stage"
+            echo "stage=false" >> "$GITHUB_OUTPUT"
           else
-            echo "publish=true" >> "$GITHUB_OUTPUT"
+            echo "stage=true" >> "$GITHUB_OUTPUT"
           fi
       # Provenance is requested here, not in package.json: it needs a CI OIDC
       # provider, and a maintainer must still be able to publish from a laptop.
-      - if: steps.check.outputs.publish == 'true'
-        run: npm publish --provenance
+      - if: steps.check.outputs.stage == 'true'
+        run: npm stage publish --provenance
