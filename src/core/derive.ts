@@ -72,6 +72,22 @@ export const usedKeys = (state: SearchBuilderState, options: SearchBuilderOption
   return set
 }
 
+/**
+ * A label split around the first, case-insensitive occurrence of what was
+ * typed, so a row can show *why* it matched. Uses the same trimmed, lowercased
+ * query `matches` filters by; an empty query or no hit yields one plain segment.
+ */
+export function matchSegments (text: string, query: string): Array<{ text: string, hit: boolean }> {
+  const needle = query.trim().toLowerCase()
+  const at = needle ? text.toLowerCase().indexOf(needle) : -1
+  if (at === -1) return [{ text, hit: false }]
+  return [
+    { text: text.slice(0, at), hit: false },
+    { text: text.slice(at, at + needle.length), hit: true },
+    { text: text.slice(at + needle.length), hit: false }
+  ].filter((s) => s.text)
+}
+
 const matches = (item: Value, text: string): boolean =>
   !text || item.label.toLowerCase().includes(text) || (item.sub?.toLowerCase().includes(text) ?? false)
 

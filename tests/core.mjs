@@ -2,7 +2,7 @@
 // the types on import, so this runs `../src/core/index.ts` directly.
 import {
   createSearchBuilder, groups, flatOptions, status, canApply, isMultiSelect,
-  getRootProps, getInputProps, chipValues, appliedSummary
+  getRootProps, getInputProps, chipValues, appliedSummary, matchSegments
 } from '../src/core/index.ts'
 import { FILTERS } from '../src/data/filters.js'
 
@@ -344,6 +344,15 @@ function pick (store, kind, payload) {
   const anyOf = def.operators.find((o) => o.value === 'in')
   check('Q9. Me carries into a multi-value operator', store.actions.carryValues(['Me'], anyOf, def), ['Me'])
   check('Q10. None still does not', store.actions.carryValues(['None'], anyOf, def), null)
+}
+
+// ---- matchSegments: why a row matched ----
+{
+  check('S1. splits around the first case-insensitive hit', matchSegments('Nadia Okonkwo', 'nad'), [{ text: 'Nad', hit: true }, { text: 'ia Okonkwo', hit: false }])
+  check('S2. a hit in the middle keeps both sides', matchSegments('needs-review', 'rev'), [{ text: 'needs-', hit: false }, { text: 'rev', hit: true }, { text: 'iew', hit: false }])
+  check('S3. trims the query like the filter does', matchSegments('Milestone', '  mile '), [{ text: 'Mile', hit: true }, { text: 'stone', hit: false }])
+  check('S4. no query, one plain segment', matchSegments('Milestone', ''), [{ text: 'Milestone', hit: false }])
+  check('S5. no hit, one plain segment', matchSegments('Milestone', 'zzz'), [{ text: 'Milestone', hit: false }])
 }
 
 console.log(`\n${pass} passed, ${fail} failed`)

@@ -10,7 +10,7 @@ export {
   defOf, operatorFor, operatorWords, operatorSymbol, isMultiSelect, valuePool, valueLabel,
   spokenToken, draftSpoken, usedKeys, groups, flatOptions, indexedGroups, listboxLabel,
   placeholder, status, canApply, isChosen, appliedSummary, tokenLabel, tokenValues, isEditing,
-  hasOperatorChoice, operatorText, chipOperator, chipValues, isNegated, partName
+  hasOperatorChoice, operatorText, chipOperator, chipValues, isNegated, partName, matchSegments
 } from './derive.ts'
 
 export {
