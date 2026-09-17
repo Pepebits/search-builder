@@ -254,7 +254,21 @@ const AVATAR =
         </li>
         <!-- Outside the option set, so an empty list never reads "1 of 1". -->
         <li v-if="status" v-bind="getStatusRowProps()" class="px-2.5 py-2.5 text-[13px] text-ink-3">
-          {{ status.text }}
+          <template v-if="status.kind === 'loading'">
+            <span :class="SR_ONLY">{{ status.text }}</span>
+            <!-- Placeholder rows the shape of what is coming, so the list does not jump when it lands. -->
+            <div
+              v-for="n in 3"
+              :key="n"
+              data-fs="skeleton"
+              class="flex items-center gap-2.5 py-[7px] motion-safe:animate-pulse"
+              aria-hidden="true"
+            >
+              <span class="h-[22px] w-[22px] flex-none rounded-full bg-surface-2" />
+              <span class="h-3 rounded bg-surface-2" :style="{ width: `${34 - n * 6}%` }" />
+            </div>
+          </template>
+          <template v-else>{{ status.text }}</template>
         </li>
       </ul>
     </div>

@@ -139,6 +139,11 @@ button[data-fs='value'] > span { overflow: hidden; text-overflow: ellipsis; whit
 [data-fs='option'][aria-selected='true'] .fs-check { color: var(--fs-accent-ink); }
 
 [data-fs='status'] { padding: 10px 9px; font-size: 13px; color: var(--fs-ink-3); }
+/* Loading: placeholder rows the shape of what is coming. */
+[data-fs='skeleton'] { display: flex; align-items: center; gap: 9px; padding: 7px 0; animation: fs-pulse 1.2s ease-in-out infinite; }
+.fs-skeleton-av { flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--fs-surface-2); }
+.fs-skeleton-bar { height: 12px; border-radius: 4px; background: var(--fs-surface-2); }
+@keyframes fs-pulse { 50% { opacity: .45; } }
 
 /* --- actions --------------------------------------------------------- */
 
@@ -158,7 +163,7 @@ button[data-fs='value'] > span { overflow: hidden; text-overflow: ellipsis; whit
 
 /* --- text for screen readers only ------------------------------------ */
 
-[data-fs='label'], [data-fs='applied'], [data-fs='live'] {
+[data-fs='label'], [data-fs='applied'], [data-fs='live'], .fs-vh {
   position: absolute !important;
   width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%);

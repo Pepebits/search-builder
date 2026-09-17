@@ -370,5 +370,19 @@ const outsideFocus = (t, el) =>
   t.dom.window.close()
 }
 
+// ---- skeleton rows while an async list loads ----
+{
+  const t = await fresh()
+  t.clickInput(); t.type('assign'); await t.tick()
+  t.key('Enter'); await t.tick()
+  t.key('Enter'); await t.tick(20)
+  check('U1. three placeholder rows while fetching', t.d.querySelectorAll("[data-fs='skeleton']").length, 3)
+  check('U2. hidden from assistive tech', [...t.d.querySelectorAll("[data-fs='skeleton']")].every((el) => el.getAttribute('aria-hidden') === 'true'), true)
+  check('U3. the status text is still in the row for the DOM', t.d.querySelector("[data-fs='status']").textContent.includes('Loading suggestions'), true)
+  await t.tick(500)
+  check('U4. gone once the list lands', t.d.querySelectorAll("[data-fs='skeleton']").length, 0)
+  t.dom.window.close()
+}
+
 console.log(`\n${pass} passed, ${fail} failed`)
 process.exit(fail ? 1 : 0)

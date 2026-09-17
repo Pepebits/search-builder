@@ -8,6 +8,8 @@ All notable changes to this project are documented in this file. The format foll
 
 ### Added
 
+- Placeholder rows while an async filter loads, in both demos and the plain stylesheet
+  (`data-fs="skeleton"`), so the list keeps its shape until the values land.
 - `matchSegments(text, query)` in the core: a label split around the part that matched what was
   typed. Both demos wrap that part in a `data-fs="hit"` span; the plain stylesheet emphasises it.
 

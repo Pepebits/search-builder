@@ -120,7 +120,22 @@ export function ReactSearch ({
               ))}
             </div>
           ))}
-          {s.status && <p {...s.getStatusRowProps()}>{s.status.text}</p>}
+          {s.status && (
+            <p {...s.getStatusRowProps()}>
+              {s.status.kind === 'loading'
+                ? <>
+                    <span className="fs-vh">{s.status.text}</span>
+                    {/* Placeholder rows the shape of what is coming, so the list does not jump when it lands. */}
+                    {[1, 2, 3].map((n) => (
+                      <span key={n} data-fs="skeleton" className="fs-skeleton" aria-hidden="true">
+                        <span className="fs-skeleton-av" />
+                        <span className="fs-skeleton-bar" style={{ width: `${34 - n * 6}%` }} />
+                      </span>
+                    ))}
+                  </>
+                : s.status.text}
+            </p>
+          )}
         </div>
       </div>
 
