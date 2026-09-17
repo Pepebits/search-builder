@@ -9,7 +9,7 @@ import { createAnnouncer } from './announce.ts'
 import type { AnnounceSchedule } from './announce.ts'
 import { createDomController } from './connect.ts'
 import type { PropApi } from './props.ts'
-import type { FilteredSearchOptions, FilteredSearchState, FilteredSearchStore, Option, Token } from './types.ts'
+import type { SearchBuilderOptions, SearchBuilderState, SearchBuilderStore, Option, Token } from './types.ts'
 
 let instanceCounter = 0
 
@@ -19,7 +19,7 @@ function sameIds (a: Option[], b: Option[]): boolean {
   return true
 }
 
-export interface CreateFilteredSearchConfig {
+export interface CreateSearchBuilderConfig {
   /**
    * How `announce` schedules its delayed write. Defaults to the next
    * animation frame, or a microtask when `requestAnimationFrame` is
@@ -30,11 +30,11 @@ export interface CreateFilteredSearchConfig {
   announceSchedule?: AnnounceSchedule
 }
 
-export function createFilteredSearch (raw: FilteredSearchOptions, config: CreateFilteredSearchConfig = {}): FilteredSearchStore {
+export function createSearchBuilder (raw: SearchBuilderOptions, config: CreateSearchBuilderConfig = {}): SearchBuilderStore {
   // Reassigned, never mutated in place (see `setOptions`) — so a reference
   // captured before a `setOptions` call (see `committedOptions` below) keeps
   // describing the world as it was, instead of silently changing under it.
-  let options: FilteredSearchOptions = {
+  let options: SearchBuilderOptions = {
     ...raw,
     label: raw.label ?? 'Search or filter results',
     resultCount: raw.resultCount ?? null,
@@ -53,7 +53,7 @@ export function createFilteredSearch (raw: FilteredSearchOptions, config: Create
   }
   const optionId = (index: number): string => `${scope}-opt-${index}`
 
-  let state: FilteredSearchState = transitions.initialState(options)
+  let state: SearchBuilderState = transitions.initialState(options)
   const listeners = new Set<() => void>()
   let fetchSeq = 0
 
@@ -72,10 +72,10 @@ export function createFilteredSearch (raw: FilteredSearchOptions, config: Create
     close: () => actions.close()
   })
 
-  interface FetchPlan { state: FilteredSearchState, announceLoading: boolean, run: (() => void) | null }
+  interface FetchPlan { state: SearchBuilderState, announceLoading: boolean, run: (() => void) | null }
 
   /** The synchronous half of post-transition rule 4; the async half runs after commit stores `next`. */
-  function planValueFetch (previous: FilteredSearchState, next: FilteredSearchState, nextOptions: FilteredSearchOptions): FetchPlan {
+  function planValueFetch (previous: SearchBuilderState, next: SearchBuilderState, nextOptions: SearchBuilderOptions): FetchPlan {
     const changed = previous.stage !== next.stage || previous.draftKey !== next.draftKey || previous.query !== next.query
     if (!changed) return { state: next, announceLoading: false, run: null }
     const def = next.draftKey ? nextOptions.filters.find((f) => f.key === next.draftKey) ?? null : null
@@ -98,7 +98,7 @@ export function createFilteredSearch (raw: FilteredSearchOptions, config: Create
     }
   }
 
-  function commit (rawNext: FilteredSearchState): void {
+  function commit (rawNext: SearchBuilderState): void {
     const previous = state
     // `previous` was committed under `previousOptions`; `next` is judged
     // under whatever `options` is *now* — the two only differ mid-way
@@ -152,7 +152,7 @@ export function createFilteredSearch (raw: FilteredSearchOptions, config: Create
     }
   }
 
-  function run<T extends { state: FilteredSearchState, effects: Effect[] }> (transition: T): T {
+  function run<T extends { state: SearchBuilderState, effects: Effect[] }> (transition: T): T {
     commit(transition.state)
     applyEffects(transition.effects)
     return transition
@@ -160,7 +160,7 @@ export function createFilteredSearch (raw: FilteredSearchOptions, config: Create
 
   // One action list: the store's public actions and the ones `props.ts`'s
   // getters use internally (e.g. the listbox mouseover) are the same object.
-  const actions: FilteredSearchStore['actions'] = {
+  const actions: SearchBuilderStore['actions'] = {
     selectOption: (index) => { run(transitions.selectOption(state, options, index)) },
     applyDraft: () => { run(transitions.applyDraft(state, options)) },
     confirmDraft: () => run(transitions.confirmDraft(state, options)).ok,

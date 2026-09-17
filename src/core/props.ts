@@ -4,14 +4,14 @@
 // its own framework; `event.currentTarget` (never a stored ref) is how
 // `getRootProps`'s focusout handler finds "its own" root element, which is
 // what keeps this file framework-agnostic.
-import type { FilteredSearchOptions, FilteredSearchState, IndexedOption, Option, OptionGroup, Token } from './types.ts'
+import type { SearchBuilderOptions, SearchBuilderState, IndexedOption, Option, OptionGroup, Token } from './types.ts'
 import {
   draftSpoken, flatOptions, isChosen, isMultiSelect, isNegated, listboxLabel,
   operatorFor, partName, placeholder, spokenToken, status
 } from './derive.ts'
 
 export interface PropApi {
-  options: FilteredSearchOptions
+  options: SearchBuilderOptions
   ids: { input: string, listbox: string, hint: string, applied: string }
   optionId (index: number): string
   /**
@@ -21,7 +21,7 @@ export interface PropApi {
    * past its snapshot's lifetime); `state` above is for building props to
    * *display*, `getState()` is for handlers that decide what to *do*.
    */
-  getState (): FilteredSearchState
+  getState (): SearchBuilderState
   actions: {
     setQuery (text: string): void
     open (): void
@@ -76,7 +76,7 @@ const onKeydown = (api: PropApi) => (event: KeyboardEvent): void => {
   }
 }
 
-export const getRootProps = (state: FilteredSearchState, api: PropApi): Props => ({
+export const getRootProps = (state: SearchBuilderState, api: PropApi): Props => ({
   'data-fs': 'root',
   'data-stage': state.stage,
   'data-open': state.isOpen ? 'true' : 'false',
@@ -95,7 +95,7 @@ export const getRootProps = (state: FilteredSearchState, api: PropApi): Props =>
 
 export const getLabelProps = (api: PropApi): Props => ({ 'data-fs': 'label', for: api.ids.input })
 
-export const getInputProps = (state: FilteredSearchState, api: PropApi): Props => ({
+export const getInputProps = (state: SearchBuilderState, api: PropApi): Props => ({
   'data-fs': 'input',
   id: api.ids.input,
   type: 'text',
@@ -120,7 +120,7 @@ export const getInputProps = (state: FilteredSearchState, api: PropApi): Props =
 /** For the element wrapping the chips. `display: contents` drops list roles. */
 export const getTokenListProps = (): Props => ({ 'data-fs': 'tokens', role: 'list' })
 
-export const getTokenProps = (state: FilteredSearchState, api: PropApi, token: Token): Props => ({
+export const getTokenProps = (state: SearchBuilderState, api: PropApi, token: Token): Props => ({
   'data-fs': 'token',
   'data-type': token.type === 'text' ? 'text' : 'filter',
   // The two states a chip can be in, so CSS never needs to be told twice.
@@ -130,13 +130,13 @@ export const getTokenProps = (state: FilteredSearchState, api: PropApi, token: T
 })
 
 /** The chip being built, which has no token to hang state off yet. */
-export const getPendingProps = (state: FilteredSearchState, api: PropApi): Props => ({
+export const getPendingProps = (state: SearchBuilderState, api: PropApi): Props => ({
   'data-fs': 'token',
   'data-pending': 'true',
   'data-negated': operatorFor(api.options, state.draftKey, state.draftOperator)?.negated ? 'true' : null
 })
 
-export const getOperatorProps = (state: FilteredSearchState, api: PropApi, token: Token): Props => ({
+export const getOperatorProps = (state: SearchBuilderState, api: PropApi, token: Token): Props => ({
   'data-fs': 'operator',
   type: 'button',
   'data-token': token.id,
@@ -145,7 +145,7 @@ export const getOperatorProps = (state: FilteredSearchState, api: PropApi, token
   onClick: () => { api.actions.startEditPart(token.id, 'operator') }
 })
 
-export const getValueProps = (state: FilteredSearchState, api: PropApi, token: Token): Props => ({
+export const getValueProps = (state: SearchBuilderState, api: PropApi, token: Token): Props => ({
   'data-fs': 'value',
   type: 'button',
   'data-token': token.id,
@@ -154,14 +154,14 @@ export const getValueProps = (state: FilteredSearchState, api: PropApi, token: T
   onClick: () => { api.actions.startEditPart(token.id, 'value') }
 })
 
-export const getRemoveProps = (state: FilteredSearchState, api: PropApi, token: Token): Props => ({
+export const getRemoveProps = (state: SearchBuilderState, api: PropApi, token: Token): Props => ({
   'data-fs': 'remove',
   type: 'button',
   'aria-label': `Remove filter: ${spokenToken(state, api.options, token)}`,
   onClick: () => { api.actions.removeToken(token.id); api.actions.focusInput() }
 })
 
-export const getListboxProps = (state: FilteredSearchState, api: PropApi): Props => ({
+export const getListboxProps = (state: SearchBuilderState, api: PropApi): Props => ({
   'data-fs': 'listbox',
   'data-stage': state.stage,
   id: api.ids.listbox,
@@ -175,7 +175,7 @@ export const getListboxProps = (state: FilteredSearchState, api: PropApi): Props
 
 export const getGroupProps = (group: OptionGroup): Props => ({ 'data-fs': 'group', role: 'group', 'aria-label': group.label })
 
-export const getOptionProps = (state: FilteredSearchState, api: PropApi, option: IndexedOption): Props => ({
+export const getOptionProps = (state: SearchBuilderState, api: PropApi, option: IndexedOption): Props => ({
   'data-fs': 'option',
   'data-kind': option.kind,
   id: api.optionId(option.index),
@@ -195,7 +195,7 @@ export const getOptionProps = (state: FilteredSearchState, api: PropApi, option:
 })
 
 /** Loading and empty rows sit outside the option set on purpose. */
-export const getStatusRowProps = (state: FilteredSearchState, api: PropApi): Props => ({
+export const getStatusRowProps = (state: SearchBuilderState, api: PropApi): Props => ({
   'data-fs': 'status',
   'data-kind': status(state, api.options)?.kind ?? null,
   role: 'presentation'
@@ -205,14 +205,14 @@ export const getHintProps = (api: PropApi): Props => ({ 'data-fs': 'hint', id: a
 export const getAppliedProps = (api: PropApi): Props => ({ 'data-fs': 'applied', id: api.ids.applied })
 export const getLiveRegionProps = (): Props => ({ 'data-fs': 'live', role: 'status', 'aria-live': 'polite' })
 
-export const getApplyProps = (state: FilteredSearchState, api: PropApi): Props => ({
+export const getApplyProps = (state: SearchBuilderState, api: PropApi): Props => ({
   'data-fs': 'apply',
   type: 'button',
   'aria-label': `Apply filter: ${draftSpoken(state, api.options)}`,
   onClick: () => { api.actions.applyDraft(); api.actions.focusInput() }
 })
 
-export const getDiscardProps = (state: FilteredSearchState, api: PropApi): Props => ({
+export const getDiscardProps = (state: SearchBuilderState, api: PropApi): Props => ({
   'data-fs': 'discard',
   type: 'button',
   'aria-label': `Discard the filter being added: ${draftSpoken(state, api.options)}`,

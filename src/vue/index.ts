@@ -1,13 +1,13 @@
 // The Vue adapter: a thin composable over the framework-agnostic store that
 // keeps today's return shape (names, and which members are refs) so
-// `FilteredSearch.vue` and `HeadlessSearch.vue` only change their import.
+// `SearchBuilder.vue` and `HeadlessSearch.vue` only change their import.
 import { computed, nextTick, onScopeDispose, ref, shallowRef, unref, watch } from 'vue'
 import type { Ref } from 'vue'
 import * as core from '../core/index.ts'
 import type { FilterDef, Option, Token } from '../core/index.ts'
 import { normalizeProps } from './normalize.ts'
 
-export interface UseFilteredSearchOptions {
+export interface UseSearchBuilderOptions {
   /** v-model array of tokens. */
   tokens?: Ref<Token[]>
   filters: FilterDef[] | Ref<FilterDef[]>
@@ -19,7 +19,7 @@ export interface UseFilteredSearchOptions {
   recentLimit?: number
 }
 
-export function useFilteredSearch (options: UseFilteredSearchOptions) {
+export function useSearchBuilder (options: UseSearchBuilderOptions) {
   const {
     tokens,
     filters,
@@ -31,7 +31,7 @@ export function useFilteredSearch (options: UseFilteredSearchOptions) {
     recentLimit = 3
   } = options
 
-  const store = core.createFilteredSearch({
+  const store = core.createSearchBuilder({
     filters: unref(filters),
     tokens: tokens ? unref(tokens) : [],
     label: unref(label),

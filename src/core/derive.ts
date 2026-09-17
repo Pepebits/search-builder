@@ -2,7 +2,7 @@
 // (state, options); nothing here stores anything — the store holds the one
 // state object, this file only reads it.
 import type {
-  FilterDef, FilterToken, FilteredSearchOptions, FilteredSearchState, IndexedGroup, IndexedOption,
+  FilterDef, FilterToken, SearchBuilderOptions, SearchBuilderState, IndexedGroup, IndexedOption,
   Operator, Option, OptionGroup, Status, Token, Value
 } from './types.ts'
 
@@ -14,31 +14,31 @@ function listSentence (items: string[]): string {
   return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`
 }
 
-export const defOf = (options: FilteredSearchOptions, key: string | null): FilterDef | null =>
+export const defOf = (options: SearchBuilderOptions, key: string | null): FilterDef | null =>
   (key ? options.filters.find((f) => f.key === key) ?? null : null)
 
-export const operatorFor = (options: FilteredSearchOptions, key: string | null, operator: string | null): Operator | null =>
+export const operatorFor = (options: SearchBuilderOptions, key: string | null, operator: string | null): Operator | null =>
   defOf(options, key)?.operators.find((o) => o.value === operator) ?? null
 
 /** The words a screen reader reads: "is any of". */
-export const operatorWords = (options: FilteredSearchOptions, key: string | null, operator: string | null): string =>
+export const operatorWords = (options: SearchBuilderOptions, key: string | null, operator: string | null): string =>
   operatorFor(options, key, operator)?.description ?? String(operator)
 
 /** The short form the chip draws: "=", "~", "≥". Never the raw wire key. */
-export const operatorSymbol = (options: FilteredSearchOptions, key: string | null, operator: string | null): string =>
+export const operatorSymbol = (options: SearchBuilderOptions, key: string | null, operator: string | null): string =>
   operatorFor(options, key, operator)?.symbol ?? String(operator)
 
-export const isMultiSelect = (state: FilteredSearchState, options: FilteredSearchOptions): boolean =>
+export const isMultiSelect = (state: SearchBuilderState, options: SearchBuilderOptions): boolean =>
   operatorFor(options, state.draftKey, state.draftOperator)?.multiple === true
 
-export const valuePool = (state: FilteredSearchState, def: FilterDef | null): Value[] =>
+export const valuePool = (state: SearchBuilderState, def: FilterDef | null): Value[] =>
   [...(def?.specialValues ?? []), ...(def?.values ?? []), ...state.fetched]
 
-export const valueLabel = (state: FilteredSearchState, options: FilteredSearchOptions, key: string | null, value: string): string =>
+export const valueLabel = (state: SearchBuilderState, options: SearchBuilderOptions, key: string | null, value: string): string =>
   valuePool(state, defOf(options, key)).find((v) => v.value === value)?.label ?? value
 
 /** Accessible name for a token: "Label is one of a11y and regression". */
-export const spokenToken = (state: FilteredSearchState, options: FilteredSearchOptions, token: Token): string => {
+export const spokenToken = (state: SearchBuilderState, options: SearchBuilderOptions, token: Token): string => {
   if (token.type === 'text') return `text contains ${token.value}`
   const def = defOf(options, token.type)
   const values = asArray(token.value).map((v) => valueLabel(state, options, token.type, v))
@@ -46,7 +46,7 @@ export const spokenToken = (state: FilteredSearchState, options: FilteredSearchO
 }
 
 /** "Milestone", then "Milestone is not one of", then the values as they are picked. */
-export const draftSpoken = (state: FilteredSearchState, options: FilteredSearchOptions): string => {
+export const draftSpoken = (state: SearchBuilderState, options: SearchBuilderOptions): string => {
   const def = defOf(options, state.draftKey)
   if (!def) return ''
   const operator = operatorFor(options, state.draftKey, state.draftOperator)
@@ -57,7 +57,7 @@ export const draftSpoken = (state: FilteredSearchState, options: FilteredSearchO
   return `${def.label}${words}${values}`
 }
 
-export const usedKeys = (state: FilteredSearchState, options: FilteredSearchOptions): Set<string> => {
+export const usedKeys = (state: SearchBuilderState, options: SearchBuilderOptions): Set<string> => {
   const set = new Set<string>()
   for (const token of state.tokens) {
     if (token.type === 'text') continue
@@ -70,9 +70,9 @@ export const usedKeys = (state: FilteredSearchState, options: FilteredSearchOpti
 const matches = (item: Value, text: string): boolean => !text || item.label.toLowerCase().includes(text)
 
 /** Memoised on the identity of (state, options.filters) — see the hand-off. */
-const groupsCache = new WeakMap<FilteredSearchState, { filters: FilterDef[]; result: OptionGroup[] }>()
+const groupsCache = new WeakMap<SearchBuilderState, { filters: FilterDef[]; result: OptionGroup[] }>()
 
-function computeGroups (state: FilteredSearchState, options: FilteredSearchOptions): OptionGroup[] {
+function computeGroups (state: SearchBuilderState, options: SearchBuilderOptions): OptionGroup[] {
   const text = state.query.trim().toLowerCase()
   const used = usedKeys(state, options)
 
@@ -157,7 +157,7 @@ function computeGroups (state: FilteredSearchState, options: FilteredSearchOptio
  * Suggestions as named groups. Every group carries its own accessible name,
  * so the section headings are not lost to screen readers.
  */
-export function groups (state: FilteredSearchState, options: FilteredSearchOptions): OptionGroup[] {
+export function groups (state: SearchBuilderState, options: SearchBuilderOptions): OptionGroup[] {
   const cached = groupsCache.get(state)
   if (cached && cached.filters === options.filters) return cached.result
   const result = computeGroups(state, options)
@@ -165,10 +165,10 @@ export function groups (state: FilteredSearchState, options: FilteredSearchOptio
   return result
 }
 
-const flatCache = new WeakMap<FilteredSearchState, { filters: FilterDef[]; result: Option[] }>()
+const flatCache = new WeakMap<SearchBuilderState, { filters: FilterDef[]; result: Option[] }>()
 
 /** Flat view for index maths; option ids come from this order. */
-export function flatOptions (state: FilteredSearchState, options: FilteredSearchOptions): Option[] {
+export function flatOptions (state: SearchBuilderState, options: SearchBuilderOptions): Option[] {
   const cached = flatCache.get(state)
   if (cached && cached.filters === options.filters) return cached.result
   const result = groups(state, options).flatMap((g) => g.options)
@@ -181,7 +181,7 @@ export function flatOptions (state: FilteredSearchState, options: FilteredSearch
  * that position is the option id `aria-activedescendant` points at. Render
  * from this, not from `groups`.
  */
-export function indexedGroups (state: FilteredSearchState, options: FilteredSearchOptions): IndexedGroup[] {
+export function indexedGroups (state: SearchBuilderState, options: SearchBuilderOptions): IndexedGroup[] {
   let index = 0
   return groups(state, options).map((group) => ({
     ...group,
@@ -189,14 +189,14 @@ export function indexedGroups (state: FilteredSearchState, options: FilteredSear
   }))
 }
 
-export const listboxLabel = (state: FilteredSearchState, options: FilteredSearchOptions): string => {
+export const listboxLabel = (state: SearchBuilderState, options: SearchBuilderOptions): string => {
   if (state.stage === 'filter') return 'Filters'
   const def = defOf(options, state.draftKey)
   if (state.stage === 'operator') return `Operators for ${def?.label}`
   return `Values for ${def?.label}`
 }
 
-export const placeholder = (state: FilteredSearchState, options: FilteredSearchOptions): string => {
+export const placeholder = (state: SearchBuilderState, options: SearchBuilderOptions): string => {
   const def = defOf(options, state.draftKey)
   if (state.stage === 'operator') return 'Choose an operator…'
   if (state.stage === 'value') {
@@ -208,7 +208,7 @@ export const placeholder = (state: FilteredSearchState, options: FilteredSearchO
 }
 
 /** Empty and busy states, so both can be announced as well as drawn. */
-export const status = (state: FilteredSearchState, options: FilteredSearchOptions): Status => {
+export const status = (state: SearchBuilderState, options: SearchBuilderOptions): Status => {
   if (state.loading) return { kind: 'loading', text: 'Loading suggestions…' }
   if (flatOptions(state, options).length) return null
   return state.query.trim()
@@ -217,13 +217,13 @@ export const status = (state: FilteredSearchState, options: FilteredSearchOption
 }
 
 /** True while the Apply affordance means anything. */
-export const canApply = (state: FilteredSearchState, options: FilteredSearchOptions): boolean =>
+export const canApply = (state: SearchBuilderState, options: SearchBuilderOptions): boolean =>
   state.stage === 'value' && isMultiSelect(state, options) && state.draftValues.length > 0
 
-export const isChosen = (state: FilteredSearchState, options: FilteredSearchOptions, option: Option): boolean =>
+export const isChosen = (state: SearchBuilderState, options: SearchBuilderOptions, option: Option): boolean =>
   isMultiSelect(state, options) && state.draftValues.includes(option.payload)
 
-export const appliedSummary = (state: FilteredSearchState, options: FilteredSearchOptions): string => {
+export const appliedSummary = (state: SearchBuilderState, options: SearchBuilderOptions): string => {
   const count = state.tokens.length
   if (!count) return 'No filters applied.'
   return `${count} ${count === 1 ? 'filter' : 'filters'} applied: ${state.tokens.map((t) => spokenToken(state, options, t)).join('; ')}.`
@@ -231,10 +231,10 @@ export const appliedSummary = (state: FilteredSearchState, options: FilteredSear
 
 /* --- display helpers a chip needs, whatever it looks like --- */
 
-export const tokenLabel = (options: FilteredSearchOptions, token: Token): string =>
+export const tokenLabel = (options: SearchBuilderOptions, token: Token): string =>
   token.type === 'text' ? 'Text' : defOf(options, token.type)?.label ?? token.type
 
-export const tokenValues = (state: FilteredSearchState, options: FilteredSearchOptions, token: Token): string[] => {
+export const tokenValues = (state: SearchBuilderState, options: SearchBuilderOptions, token: Token): string[] => {
   // `FilterToken.type` is `string` (any key but 'text'), so TS can't narrow
   // the union on it the way it narrows `TextToken`'s literal — the checks
   // below already tell the two apart at runtime, hence the casts.
@@ -243,21 +243,21 @@ export const tokenValues = (state: FilteredSearchState, options: FilteredSearchO
   return asArray(value).map((v) => valueLabel(state, options, token.type, v))
 }
 
-export const isEditing = (state: FilteredSearchState, token: Token): boolean => state.editingId === token.id
+export const isEditing = (state: SearchBuilderState, token: Token): boolean => state.editingId === token.id
 
-export const hasOperatorChoice = (options: FilteredSearchOptions, token: Token): boolean =>
+export const hasOperatorChoice = (options: SearchBuilderOptions, token: Token): boolean =>
   (defOf(options, token.type)?.operators.length ?? 0) > 1
 
-export const operatorText = (state: FilteredSearchState, options: FilteredSearchOptions, key: string | null, operator: string | null): string =>
+export const operatorText = (state: SearchBuilderState, options: SearchBuilderOptions, key: string | null, operator: string | null): string =>
   (options.friendlyOperators ? operatorWords(options, key, operator) : operatorSymbol(options, key, operator))
 
 /** What the chip draws for its operator — the draft while it is being edited. */
-export const chipOperator = (state: FilteredSearchState, options: FilteredSearchOptions, token: Token): string => {
+export const chipOperator = (state: SearchBuilderState, options: SearchBuilderOptions, token: Token): string => {
   if (!isEditing(state, token)) return operatorText(state, options, token.type, token.operator)
   return state.draftOperator ? operatorText(state, options, token.type, state.draftOperator) : '…'
 }
 
-export const chipValues = (state: FilteredSearchState, options: FilteredSearchOptions, token: Token): string => {
+export const chipValues = (state: SearchBuilderState, options: SearchBuilderOptions, token: Token): string => {
   if (!isEditing(state, token)) return tokenValues(state, options, token).join(', ')
   return state.draftValues.length
     ? state.draftValues.map((v) => valueLabel(state, options, token.type, v)).join(', ')
@@ -265,12 +265,12 @@ export const chipValues = (state: FilteredSearchState, options: FilteredSearchOp
 }
 
 /** Colour a chip as excluding. Dormant until an operator declares itself so. */
-export const isNegated = (state: FilteredSearchState, options: FilteredSearchOptions, token: Token): boolean => {
+export const isNegated = (state: SearchBuilderState, options: SearchBuilderOptions, token: Token): boolean => {
   const operator = isEditing(state, token) ? state.draftOperator : token.operator
   return operatorFor(options, token.type, operator)?.negated === true
 }
 
-export const partName = (state: FilteredSearchState, options: FilteredSearchOptions, token: Token, part: 'operator' | 'value'): string => {
+export const partName = (state: SearchBuilderState, options: SearchBuilderOptions, token: Token, part: 'operator' | 'value'): string => {
   const name = tokenLabel(options, token)
   if (part === 'operator') {
     return isEditing(state, token) && state.stage === 'operator'

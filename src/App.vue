@@ -1,11 +1,14 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
-import FilteredSearch from './components/FilteredSearch.vue'
+import SearchBuilder from './components/SearchBuilder.vue'
 import IssueList from './components/IssueList.vue'
 import DebugPanel from './components/DebugPanel.vue'
 import { FILTERS, PLAIN } from './data/filters.js'
 import { ISSUES, SORTS, applyTokens } from './data/issues.js'
-import { requestParams, schemaFor, tokensToUrl, urlToTokens } from './lib/apiable.js'
+import { createApiable } from './apiable/index.ts'
+
+const apiable = createApiable({ filters: FILTERS, path: '/api/v1/issues', sorts: SORTS, resource: 'issues' })
+const { requestParams, schema, tokensToUrl, urlToTokens } = apiable
 
 // Opens in a realistic working state — unless the address bar already carries
 // filters, in which case flex-url parses them straight back into chips.
@@ -82,7 +85,7 @@ const debugTabs = computed(() => [
     id: 'schema',
     label: 'Backend schema',
     hint: 'What apiable\'s `apiable:types` exporter publishes for this endpoint — the contract the client builds on.',
-    text: json(schemaFor(FILTERS, { sorts: SORTS }))
+    text: json(schema())
   },
   {
     id: 'filters',
@@ -127,7 +130,7 @@ const debugTabs = computed(() => [
     <div class="workbench">
       <div class="wb-head">
         <div class="wb-search">
-          <FilteredSearch
+          <SearchBuilder
             ref="searchRef"
             v-model="tokens"
             :filters="FILTERS"

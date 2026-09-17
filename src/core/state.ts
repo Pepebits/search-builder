@@ -4,7 +4,7 @@
 // must carry out afterwards (an announcement, a focus move, the onSubmit
 // callback). Nothing in this file touches `document`, `window` or a clock —
 // that is `connect.ts` and `announce.ts`'s job, orchestrated by `store.ts`.
-import type { FilterDef, FilteredSearchOptions, FilteredSearchState, Operator, Token } from './types.ts'
+import type { FilterDef, SearchBuilderOptions, SearchBuilderState, Operator, Token } from './types.ts'
 import { defOf, draftSpoken, flatOptions, isMultiSelect, spokenToken } from './derive.ts'
 
 const asArray = <T> (value: T | T[]): T[] => (Array.isArray(value) ? value : [value])
@@ -19,11 +19,11 @@ export type Effect =
   | { type: 'submit'; tokens: Token[] }
 
 export interface Transition {
-  state: FilteredSearchState
+  state: SearchBuilderState
   effects: Effect[]
 }
 
-export function initialState (options: FilteredSearchOptions): FilteredSearchState {
+export function initialState (options: SearchBuilderOptions): SearchBuilderState {
   return {
     tokens: options.tokens ?? [],
     query: '',
@@ -42,7 +42,7 @@ export function initialState (options: FilteredSearchOptions): FilteredSearchSta
   }
 }
 
-export function resetDraft (state: FilteredSearchState): FilteredSearchState {
+export function resetDraft (state: SearchBuilderState): SearchBuilderState {
   return {
     ...state,
     stage: 'filter',
@@ -69,7 +69,7 @@ export function carryValues (values: string[], operator: Operator | null, def: F
   return values.length === 1 ? values[0] : null
 }
 
-export function rememberRecent (state: FilteredSearchState, options: FilteredSearchOptions, key: string, values: string[]): FilteredSearchState {
+export function rememberRecent (state: SearchBuilderState, options: SearchBuilderOptions, key: string, values: string[]): SearchBuilderState {
   const limit = options.recentLimit ?? 3
   const previous = state.recents[key] ?? []
   return {
@@ -81,12 +81,12 @@ export function rememberRecent (state: FilteredSearchState, options: FilteredSea
   }
 }
 
-export function commitToken (state: FilteredSearchState, options: FilteredSearchOptions, value: string | string[]): Transition {
+export function commitToken (state: SearchBuilderState, options: SearchBuilderOptions, value: string | string[]): Transition {
   const type = state.draftKey as string
   const operator = state.draftOperator as string
   if (state.editingId) {
     const updated = { id: state.editingId, type, operator, value } as Token
-    let next: FilteredSearchState = { ...state, tokens: state.tokens.map((t) => (t.id === state.editingId ? updated : t)) }
+    let next: SearchBuilderState = { ...state, tokens: state.tokens.map((t) => (t.id === state.editingId ? updated : t)) }
     next = rememberRecent(next, options, type, asArray(value))
     next = { ...resetDraft(next), query: '' }
     // The original built this sentence *after* `resetDraft()`, so `spokenToken`
@@ -100,7 +100,7 @@ export function commitToken (state: FilteredSearchState, options: FilteredSearch
     return { state: next, effects: [{ type: 'announce', message: `Filter updated, ${spokenToken(next, options, updated)}.` }] }
   }
   const token = { id: nextTokenId(), type, operator, value } as Token
-  let next: FilteredSearchState = { ...state, tokens: [...state.tokens, token] }
+  let next: SearchBuilderState = { ...state, tokens: [...state.tokens, token] }
   next = rememberRecent(next, options, type, asArray(value))
   next = { ...resetDraft(next), query: '' }
   // See the comment in the `editingId` branch above: post-reset state on purpose.
@@ -108,7 +108,7 @@ export function commitToken (state: FilteredSearchState, options: FilteredSearch
 }
 
 /** Enter, or a click, on the highlighted suggestion. */
-export function selectOption (state: FilteredSearchState, options: FilteredSearchOptions, index: number = state.activeIndex): Transition {
+export function selectOption (state: SearchBuilderState, options: SearchBuilderOptions, index: number = state.activeIndex): Transition {
   const option = flatOptions(state, options)[index]
   if (!option) return { state, effects: [] }
 
@@ -162,7 +162,7 @@ export function selectOption (state: FilteredSearchState, options: FilteredSearc
 }
 
 /** Commit the multi-value filter that has been building up. */
-export function applyDraft (state: FilteredSearchState, options: FilteredSearchOptions): Transition {
+export function applyDraft (state: SearchBuilderState, options: SearchBuilderOptions): Transition {
   if (!isMultiSelect(state, options) || !state.draftValues.length) return { state, effects: [] }
   return commitToken(state, options, [...state.draftValues])
 }
@@ -177,7 +177,7 @@ export interface OkTransition extends Transition { ok: boolean }
  * resets the draft, so a second trigger in the same gesture cannot duplicate
  * the token.
  */
-export function confirmDraft (state: FilteredSearchState, options: FilteredSearchOptions): OkTransition {
+export function confirmDraft (state: SearchBuilderState, options: SearchBuilderOptions): OkTransition {
   if (!(state.stage === 'value' && isMultiSelect(state, options) && state.draftValues.length > 0)) {
     return { ok: false, state, effects: [] }
   }
@@ -185,7 +185,7 @@ export function confirmDraft (state: FilteredSearchState, options: FilteredSearc
   return { ok: true, state: result.state, effects: result.effects }
 }
 
-export function move (state: FilteredSearchState, options: FilteredSearchOptions, delta: number): Transition {
+export function move (state: SearchBuilderState, options: SearchBuilderOptions, delta: number): Transition {
   const opened = { ...state, isOpen: true }
   const count = flatOptions(opened, options).length
   if (!count) return { state: opened, effects: [] }
@@ -193,7 +193,7 @@ export function move (state: FilteredSearchState, options: FilteredSearchOptions
   return { state: { ...opened, activeIndex }, effects: [] }
 }
 
-export function jump (state: FilteredSearchState, options: FilteredSearchOptions, edge: 'start' | 'end'): Transition {
+export function jump (state: SearchBuilderState, options: SearchBuilderOptions, edge: 'start' | 'end'): Transition {
   const opened = { ...state, isOpen: true }
   const count = flatOptions(opened, options).length
   if (!count) return { state: opened, effects: [] }
@@ -202,7 +202,7 @@ export function jump (state: FilteredSearchState, options: FilteredSearchOptions
 }
 
 /** Throw away the half-built filter entirely — the pure part, no focus move. */
-export function cancelDraft (state: FilteredSearchState, options: FilteredSearchOptions): Transition {
+export function cancelDraft (state: SearchBuilderState, options: SearchBuilderOptions): Transition {
   if (state.stage === 'filter') return { state, effects: [] }
   const was = draftSpoken(state, options)
   const wasEditing = Boolean(state.editingId)
@@ -215,7 +215,7 @@ export function cancelDraft (state: FilteredSearchState, options: FilteredSearch
  * The × on the pending chip, and what the composable's public `cancelDraft`
  * actually did: discard the draft, then put focus back where it started.
  */
-export function discardDraft (state: FilteredSearchState, options: FilteredSearchOptions): Transition {
+export function discardDraft (state: SearchBuilderState, options: SearchBuilderOptions): Transition {
   const wasEditing = state.editingId
   const part = state.editPart
   const result = cancelDraft(state, options)
@@ -226,7 +226,7 @@ export function discardDraft (state: FilteredSearchState, options: FilteredSearc
 }
 
 /** Escape and Backspace unwind one stage rather than throwing the draft away. */
-export function stepBack (state: FilteredSearchState, options: FilteredSearchOptions): OkTransition {
+export function stepBack (state: SearchBuilderState, options: SearchBuilderOptions): OkTransition {
   // An edit opened straight at one stage, so there is no earlier stage to
   // unwind to: backing out means leaving the chip as it was.
   if (state.editingId) {
@@ -260,7 +260,7 @@ export function stepBack (state: FilteredSearchState, options: FilteredSearchOpt
  * Escape: unwind one stage, and if that closed out an edit, put focus back
  * on the chip part the edit was opened from.
  */
-export function escape (state: FilteredSearchState, options: FilteredSearchOptions): Transition {
+export function escape (state: SearchBuilderState, options: SearchBuilderOptions): Transition {
   const wasEditing = state.editingId
   const part = state.editPart
   const result = stepBack(state, options)
@@ -275,12 +275,12 @@ export function escape (state: FilteredSearchState, options: FilteredSearchOptio
  * Re-open one part of an existing chip: focus the part, press Space. `part` is 'operator' or 'value'; each opens only its own step,
  * because wanting a different operator is not wanting a different value.
  */
-export function startEdit (state: FilteredSearchState, options: FilteredSearchOptions, id: string, part: 'operator' | 'value' = 'operator'): OkTransition {
+export function startEdit (state: SearchBuilderState, options: SearchBuilderOptions, id: string, part: 'operator' | 'value' = 'operator'): OkTransition {
   const token = state.tokens.find((t) => t.id === id)
   if (!token || token.type === 'text') return { ok: false, state, effects: [] }
   const def = defOf(options, token.type)
   const wanted = part === 'value' || (def?.operators.length ?? 0) === 1 ? 'value' : 'operator'
-  const next: FilteredSearchState = {
+  const next: SearchBuilderState = {
     ...state,
     editingId: id,
     draftKey: token.type,
@@ -294,14 +294,14 @@ export function startEdit (state: FilteredSearchState, options: FilteredSearchOp
   return { ok: true, state: next, effects: [{ type: 'announce', message, opts: { count: false } }] }
 }
 
-export function startEditPart (state: FilteredSearchState, options: FilteredSearchOptions, id: string, part: 'operator' | 'value'): Transition {
+export function startEditPart (state: SearchBuilderState, options: SearchBuilderOptions, id: string, part: 'operator' | 'value'): Transition {
   const withPart = { ...state, editPart: part }
   const result = startEdit(withPart, options, id, part)
   if (!result.ok) return { state: withPart, effects: [] }
   return { state: result.state, effects: [...result.effects, { type: 'focusInput' }] }
 }
 
-export function handleBackspace (state: FilteredSearchState, options: FilteredSearchOptions, event: { preventDefault (): void }): Transition {
+export function handleBackspace (state: SearchBuilderState, options: SearchBuilderOptions, event: { preventDefault (): void }): Transition {
   if (state.query !== '') return { state, effects: [] }
   if (state.stage !== 'filter') {
     event.preventDefault()
@@ -315,7 +315,7 @@ export function handleBackspace (state: FilteredSearchState, options: FilteredSe
   return { state: next, effects: [{ type: 'announce', message: `Filter removed, ${spokenToken(state, options, last)}.` }] }
 }
 
-export function removeToken (state: FilteredSearchState, options: FilteredSearchOptions, id: string): Transition {
+export function removeToken (state: SearchBuilderState, options: SearchBuilderOptions, id: string): Transition {
   const base = state.editingId === id ? resetDraft(state) : state
   const token = state.tokens.find((t) => t.id === id)
   const next = { ...base, tokens: base.tokens.filter((t) => t.id !== id) }
@@ -324,7 +324,7 @@ export function removeToken (state: FilteredSearchState, options: FilteredSearch
 }
 
 /** A term typed but never turned into a chip still counts as the search. */
-export function commitPendingText (state: FilteredSearchState): OkTransition {
+export function commitPendingText (state: SearchBuilderState): OkTransition {
   if (state.stage !== 'filter') return { ok: false, state, effects: [] }
   const text = state.query.trim()
   if (!text) return { ok: false, state, effects: [] }
@@ -333,14 +333,14 @@ export function commitPendingText (state: FilteredSearchState): OkTransition {
   return { ok: true, state: next, effects: [] }
 }
 
-export function clearAll (state: FilteredSearchState): Transition {
+export function clearAll (state: SearchBuilderState): Transition {
   if (!state.tokens.length && !state.query && state.stage === 'filter') return { state, effects: [] }
   const next = { ...resetDraft(state), tokens: [], query: '' }
   return { state: next, effects: [{ type: 'announce', message: 'All filters cleared.' }] }
 }
 
 /** Run the search: commit anything still typed, close the list, keep focus. */
-export function submit (state: FilteredSearchState): Transition {
+export function submit (state: SearchBuilderState): Transition {
   const pending = commitPendingText(state)
   const next = { ...pending.state, isOpen: false }
   return {
@@ -354,24 +354,24 @@ export function submit (state: FilteredSearchState): Transition {
 }
 
 /** The listbox's mouseover highlight — a direct jump, no wrap-around maths. */
-export function setActiveIndex (state: FilteredSearchState, index: number): Transition {
+export function setActiveIndex (state: SearchBuilderState, index: number): Transition {
   return { state: { ...state, activeIndex: index }, effects: [] }
 }
 
-export function open (state: FilteredSearchState): Transition {
+export function open (state: SearchBuilderState): Transition {
   return { state: { ...state, isOpen: true }, effects: [] }
 }
 
-export function close (state: FilteredSearchState): Transition {
+export function close (state: SearchBuilderState): Transition {
   return { state: { ...state, isOpen: false }, effects: [] }
 }
 
-export function setQuery (state: FilteredSearchState, text: string): Transition {
+export function setQuery (state: SearchBuilderState, text: string): Transition {
   return { state: { ...state, query: text }, effects: [] }
 }
 
 /** A no-op when the array is the same reference — what keeps the adapter's sync from looping. */
-export function setTokens (state: FilteredSearchState, tokens: Token[]): Transition {
+export function setTokens (state: SearchBuilderState, tokens: Token[]): Transition {
   if (tokens === state.tokens) return { state, effects: [] }
   return { state: { ...state, tokens }, effects: [] }
 }

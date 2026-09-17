@@ -2,7 +2,7 @@
 /**
  * The styled bar, in Tailwind.
  *
- * Every behaviour and every ARIA attribute comes from `useFilteredSearch`
+ * Every behaviour and every ARIA attribute comes from `useSearchBuilder`
  * through its prop getters; this file contributes tags and utilities. The
  * state variants below — `state-active:`, `state-editing:`, `in-negated:` —
  * read the same `data-*` attributes the getters set for the accessibility
@@ -12,7 +12,7 @@
  * `../styles/filtered-search.css` instead: it targets the same attributes.
  */
 import { computed, toRef } from 'vue'
-import { useFilteredSearch } from '../vue/index.ts'
+import { useSearchBuilder } from '../vue/index.ts'
 import { toneHue } from '../core/index.ts'
 
 const props = defineProps({
@@ -33,7 +33,7 @@ const emit = defineEmits(['submit', 'announce'])
 /** Two-way array of { id, type, operator, value }. */
 const tokens = defineModel({ type: Array, default: () => [] })
 
-const search = useFilteredSearch({
+const search = useSearchBuilder({
   tokens,
   filters: computed(() => props.filters),
   label: toRef(props, 'label'),

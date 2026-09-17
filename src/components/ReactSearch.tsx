@@ -11,7 +11,7 @@
 import type { CSSProperties } from 'react'
 import { toneHue } from '../core/index.ts'
 import type { FilterDef, IndexedOption, Token } from '../core/index.ts'
-import { useFilteredSearch } from '../react/index.ts'
+import { useSearchBuilder } from '../react/index.ts'
 // The proof this component needs no Tailwind and no Vue: the same design
 // tokens and the same plain stylesheet the unstyled Vue demo leaves unused.
 import '../styles/tokens.css'
@@ -51,7 +51,7 @@ export function ReactSearch ({
   filters, label = 'Search or filter results', resultCount = null,
   tokens, onTokensChange, onSubmit, onAnnounce
 }: ReactSearchProps) {
-  const s = useFilteredSearch({ filters, tokens, onTokensChange, label, resultCount, onSubmit, onAnnounce })
+  const s = useSearchBuilder({ filters, tokens, onTokensChange, label, resultCount, onSubmit, onAnnounce })
 
   return (
     <section {...s.getRootProps()}>

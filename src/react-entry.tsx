@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ReactSearch } from './components/ReactSearch.tsx'
-import { useFilteredSearch } from './react/index.ts'
+import { useSearchBuilder } from './react/index.ts'
 import { FILTERS, PLAIN } from './data/filters.js'
 import { ISSUES, applyTokens } from './data/issues.js'
 import type { Token } from './core/index.ts'
@@ -26,7 +26,7 @@ declare global {
 }
 
 function InlineFiltersProbe () {
-  const s = useFilteredSearch({ filters: [...FILTERS], label: 'Inline filters probe' })
+  const s = useSearchBuilder({ filters: [...FILTERS], label: 'Inline filters probe' })
   return (
     <div {...s.getRootProps()}>
       <input {...s.getInputProps()} />

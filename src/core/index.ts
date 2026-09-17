@@ -1,8 +1,8 @@
 // Public entry point: the store factory, every derived-data and prop-getter
 // function, `toneHue`, `nextTokenId`, and the types. Nothing here imports a
 // UI framework or the apiable URL library — see ADR-0001 and ADR-0003.
-export { createFilteredSearch } from './store.ts'
-export type { CreateFilteredSearchConfig } from './store.ts'
+export { createSearchBuilder } from './store.ts'
+export type { CreateSearchBuilderConfig } from './store.ts'
 export { nextTokenId } from './state.ts'
 export { toneHue, TONE_HUES } from './tone.ts'
 
@@ -23,6 +23,6 @@ export type { PropApi } from './props.ts'
 
 export type {
   Value, Operator, FilterDef, TextToken, FilterToken, Token, Stage, Option, OptionGroup,
-  IndexedOption, IndexedGroup, Status, FilteredSearchState, FilteredSearchOptions,
-  FilteredSearchStore
+  IndexedOption, IndexedGroup, Status, SearchBuilderState, SearchBuilderOptions,
+  SearchBuilderStore
 } from './types.ts'

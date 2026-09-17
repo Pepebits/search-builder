@@ -1,7 +1,7 @@
 // Live-region sequencing. Per ADR-0005 §7: bump a sequence, clear the live
 // text, and write on the next animation frame (or a microtask when
 // `requestAnimationFrame` is missing, e.g. tests/core.mjs's plain Node).
-import type { FilteredSearchOptions } from './types.ts'
+import type { SearchBuilderOptions } from './types.ts'
 
 export interface AnnounceOpts { count?: boolean }
 export type Announce = (message: string, opts?: AnnounceOpts) => void
@@ -27,7 +27,7 @@ export const defaultAnnounceSchedule: AnnounceSchedule = (fn) => {
  */
 export function createAnnouncer (
   setAnnouncement: (text: string) => void,
-  getOptions: () => FilteredSearchOptions,
+  getOptions: () => SearchBuilderOptions,
   schedule: AnnounceSchedule = defaultAnnounceSchedule
 ): Announce {
   let seq = 0

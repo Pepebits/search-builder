@@ -11,7 +11,7 @@ import { normalizeProps } from './normalize.ts'
 const sameMembers = <T>(a: T[], b: T[]): boolean =>
   a === b || (a.length === b.length && a.every((item, index) => item === b[index]))
 
-export interface UseFilteredSearchOptions {
+export interface UseSearchBuilderOptions {
   filters: FilterDef[]
   /** Controlled tokens, React's `value`/`onChange` idiom. */
   tokens?: Token[]
@@ -28,7 +28,7 @@ export interface UseFilteredSearchOptions {
   onAnnounce?: (text: string) => void
 }
 
-export function useFilteredSearch (options: UseFilteredSearchOptions) {
+export function useSearchBuilder (options: UseSearchBuilderOptions) {
   const {
     filters,
     tokens,
@@ -54,7 +54,7 @@ export function useFilteredSearch (options: UseFilteredSearchOptions) {
   const onTokensChangeRef = useRef(onTokensChange)
   onTokensChangeRef.current = onTokensChange
 
-  const [store] = useState(() => core.createFilteredSearch({
+  const [store] = useState(() => core.createSearchBuilder({
     filters,
     tokens: tokens ?? defaultTokens ?? [],
     label,

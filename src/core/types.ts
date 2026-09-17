@@ -25,7 +25,7 @@ export interface Operator {
   negated?: boolean
 }
 
-/** A filter definition, as authored in `src/data/filters.js`. */
+/** A filter definition: one row of the bar's filter list, and the shape `createSearchBuilder` is configured with. */
 export interface FilterDef {
   key: string
   label: string
@@ -97,7 +97,7 @@ export type Status =
   | null
 
 /** One immutable snapshot of everything the behaviour needs. */
-export interface FilteredSearchState {
+export interface SearchBuilderState {
   tokens: Token[]
   query: string
   isOpen: boolean
@@ -114,7 +114,7 @@ export interface FilteredSearchState {
   announcement: string
 }
 
-export interface FilteredSearchOptions {
+export interface SearchBuilderOptions {
   filters: FilterDef[]
   tokens?: Token[]
   label?: string
@@ -128,11 +128,11 @@ export interface FilteredSearchOptions {
   onTokensChange?: (tokens: Token[]) => void
 }
 
-export interface FilteredSearchStore {
-  getState(): FilteredSearchState
-  getOptions(): FilteredSearchOptions
+export interface SearchBuilderStore {
+  getState(): SearchBuilderState
+  getOptions(): SearchBuilderOptions
   subscribe(listener: () => void): () => void
-  setOptions(partial: Partial<FilteredSearchOptions>): void
+  setOptions(partial: Partial<SearchBuilderOptions>): void
   connect(root: HTMLElement, schedule?: (fn: () => void) => void): () => void
   api: PropApi
   actions: {

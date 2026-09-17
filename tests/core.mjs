@@ -1,7 +1,7 @@
 // Unit suite for the framework-agnostic core — no DOM, no Vue. Node 24 strips
 // the types on import, so this runs `../src/core/index.ts` directly.
 import {
-  createFilteredSearch, groups, flatOptions, status, canApply, isMultiSelect,
+  createSearchBuilder, groups, flatOptions, status, canApply, isMultiSelect,
   getRootProps, getInputProps, chipValues, appliedSummary
 } from '../src/core/index.ts'
 import { FILTERS } from '../src/data/filters.js'
@@ -22,7 +22,7 @@ function pick (store, kind, payload) {
 
 // ---- initial state ----
 {
-  const store = createFilteredSearch({ filters: FILTERS, id: 'fs-t1' })
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t1' })
   const s = store.getState()
   check('A1. starts on the filter stage', s.stage, 'filter')
   check('A2. no tokens yet', s.tokens, [])
@@ -35,7 +35,7 @@ function pick (store, kind, payload) {
 
 // ---- filter -> operator -> value, via selectOption ----
 {
-  const store = createFilteredSearch({ filters: FILTERS, id: 'fs-t2' })
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t2' })
   pick(store, 'filter', 'milestone')
   check('B1. picking a filter advances to the operator stage', store.getState().stage, 'operator')
   check('B2. draftKey is set', store.getState().draftKey, 'milestone')
@@ -52,7 +52,7 @@ function pick (store, kind, payload) {
 
 // ---- confirmDraft: guarded by canApply, and idempotent ----
 {
-  const store = createFilteredSearch({ filters: FILTERS, id: 'fs-t3' })
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t3' })
   check('C1. nothing to confirm on the filter stage', store.actions.confirmDraft(), false)
   pick(store, 'filter', 'milestone')
   pick(store, 'operator', 'in')
@@ -65,7 +65,7 @@ function pick (store, kind, payload) {
 
 // ---- stepBack at each stage ----
 {
-  const store = createFilteredSearch({ filters: FILTERS, id: 'fs-t4' })
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t4' })
   pick(store, 'filter', 'milestone')
   pick(store, 'operator', 'in')
   pick(store, 'value', 'v4.2')
@@ -84,7 +84,7 @@ function pick (store, kind, payload) {
 
 // ---- startEdit + carryValues: a one-step operator change ----
 {
-  const store = createFilteredSearch({
+  const store = createSearchBuilder({
     filters: FILTERS,
     tokens: [{ id: 'seed', type: 'milestone', operator: 'equal', value: 'v4.2' }],
     id: 'fs-t5'
@@ -102,7 +102,7 @@ function pick (store, kind, payload) {
 
 // ---- commitPendingText ----
 {
-  const store = createFilteredSearch({ filters: FILTERS, id: 'fs-t6' })
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t6' })
   check('F1. nothing to commit when empty', store.actions.commitPendingText(), false)
   store.actions.setQuery('hydration')
   check('F2. commits the typed text', store.actions.commitPendingText(), true)
@@ -112,7 +112,7 @@ function pick (store, kind, payload) {
 
 // ---- handleBackspace removes the last chip ----
 {
-  const store = createFilteredSearch({
+  const store = createSearchBuilder({
     filters: FILTERS,
     tokens: [{ id: 'seed', type: 'state', operator: 'equal', value: 'opened' }],
     id: 'fs-t7'
@@ -125,12 +125,12 @@ function pick (store, kind, payload) {
 
 // ---- groups: Free text, Typed value, Recently used ----
 {
-  const store = createFilteredSearch({ filters: FILTERS, id: 'fs-t8' })
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t8' })
   store.actions.setQuery('zzzz')
   check('H1. free text is offered in the filter stage', groups(store.getState(), store.getOptions()).map((g) => g.label), ['Free text'])
 }
 {
-  const store = createFilteredSearch({ filters: FILTERS, id: 'fs-t9' })
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t9' })
   pick(store, 'filter', 'title')
   pick(store, 'operator', 'like')
   store.actions.setQuery('hydration')
@@ -138,7 +138,7 @@ function pick (store, kind, payload) {
   check('H2. a free-value filter offers the typed text', g.some((x) => x.label === 'Typed value'), true)
 }
 {
-  const store = createFilteredSearch({ filters: FILTERS, id: 'fs-t10' })
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t10' })
   pick(store, 'filter', 'label')
   pick(store, 'operator', 'equal')
   pick(store, 'value', 'a11y')
@@ -153,13 +153,13 @@ function pick (store, kind, payload) {
 
 // ---- post-transition rules 1-3 ----
 {
-  const store = createFilteredSearch({ filters: FILTERS, id: 'fs-t11' })
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t11' })
   check('I1. starts closed', store.getState().isOpen, false)
   store.actions.setQuery('mile')
   check('I2. rule 1: typing reopens', store.getState().isOpen, true)
 }
 {
-  const store = createFilteredSearch({ filters: FILTERS, id: 'fs-t12' })
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t12' })
   store.actions.open()
   store.api.actions.setActiveIndex(2)
   check('J1. activeIndex set away from 0', store.getState().activeIndex, 2)
@@ -167,7 +167,7 @@ function pick (store, kind, payload) {
   check('J2. rule 2: a fresh option list resets activeIndex to 0', store.getState().activeIndex, 0)
 }
 {
-  const store = createFilteredSearch({ filters: FILTERS, id: 'fs-t13' })
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t13' })
   pick(store, 'filter', 'milestone')
   pick(store, 'operator', 'equal')
   store.actions.setQuery('zzzzzz')
@@ -182,7 +182,7 @@ function pick (store, kind, payload) {
 // ---- setTokens is a no-op on the same reference; onTokensChange fires on commit ----
 {
   const seen = []
-  const store = createFilteredSearch({ filters: FILTERS, id: 'fs-t14', onTokensChange: (t) => seen.push(t) })
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t14', onTokensChange: (t) => seen.push(t) })
   const before = store.getState().tokens
   store.actions.setTokens(before)
   check('L1. same reference: state untouched', store.getState().tokens, before)
@@ -196,7 +196,7 @@ function pick (store, kind, payload) {
 
 // ---- prop getters: React-cased handlers, no ref ----
 {
-  const store = createFilteredSearch({ filters: FILTERS, id: 'fs-t15' })
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t15' })
   const root = getRootProps(store.getState(), store.api)
   check('M1. no ref on the core root props', 'ref' in root, false)
   check('M2. React-cased focus-out handler', typeof root.onFocusOut, 'function')
@@ -212,7 +212,7 @@ function pick (store, kind, payload) {
 // still act on whatever the state is *now*, not what it was when the props
 // object was constructed.
 {
-  const store = createFilteredSearch({ filters: FILTERS, id: 'fs-t18' })
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t18' })
   const staleClosed = store.getState()
   const input = getInputProps(staleClosed, store.api)
   // Change state through an action *after* the props were built — the
@@ -225,7 +225,7 @@ function pick (store, kind, payload) {
     store.getState().draftKey !== null, true)
 }
 {
-  const store = createFilteredSearch({ filters: FILTERS, id: 'fs-t19' })
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t19' })
   pick(store, 'filter', 'label')
   pick(store, 'operator', 'in')
   pick(store, 'value', 'a11y')
@@ -247,7 +247,7 @@ function pick (store, kind, payload) {
 // id that was not in the DOM. Fixed by making `options` immutable and having
 // `commit` derive `previous` under the options it was actually committed with.
 {
-  const store = createFilteredSearch({ filters: FILTERS, id: 'fs-t16' })
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t16' })
   store.actions.open()
   store.api.actions.setActiveIndex(6)
   store.setOptions({ filters: FILTERS.slice(0, 2) })
@@ -270,7 +270,7 @@ function pick (store, kind, payload) {
 // pre-existing and intentionally left alone; see the comment in state.ts.
 {
   const seen = []
-  const store = createFilteredSearch({ filters: FILTERS, id: 'fs-t17', onAnnounce: (t) => seen.push(t) })
+  const store = createSearchBuilder({ filters: FILTERS, id: 'fs-t17', onAnnounce: (t) => seen.push(t) })
   pick(store, 'filter', 'assignee')
   pick(store, 'operator', 'equal')
   await new Promise((resolve) => setTimeout(resolve, 400))

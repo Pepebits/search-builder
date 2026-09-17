@@ -12,7 +12,7 @@
  * (src/headless-starter.css); tests/headless.mjs runs it with no CSS at all.
  */
 import { computed } from 'vue'
-import { useFilteredSearch } from '../vue/index.ts'
+import { useSearchBuilder } from '../vue/index.ts'
 
 const props = defineProps({
   filters: { type: Array, required: true },
@@ -22,7 +22,7 @@ const props = defineProps({
 
 const tokens = defineModel({ type: Array, default: () => [] })
 
-const s = useFilteredSearch({
+const s = useSearchBuilder({
   tokens,
   filters: computed(() => props.filters),
   label: computed(() => props.label),
