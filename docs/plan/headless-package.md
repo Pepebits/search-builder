@@ -33,8 +33,8 @@ optional peer dependency — it is the apiable URL boundary, not part of the com
 | 0 | `flex-url` as optional peer dependency; `typescript` + `vue-tsc` tooling; `tsconfig.json`; `npm run typecheck` | `npm test` green, typecheck green |
 | 1 | TypeScript core (`src/core/`) with no framework imports; Vue adapter (`src/vue/`) exposing the **same public API** the composable has today; the old composable path removed and imports updated; `tests/core.mjs` unit suite without DOM | all five suites green; the two demos unchanged in behaviour |
 | 2 | React adapter (`src/react/`) + a React demo styled with the plain stylesheet, a Playwright suite driving it (parametrised copy of `tests/headless.mjs`), and the demo site as a Vite multi-page build (styled Vue, headless Vue, React) deployable to GitHub Pages | React suite green with the same assertions as the Vue headless suite; `npm run build` produces the three pages |
-| 3 | apiable helpers moved to `src/apiable/` with `flex-url` imported only there; docs restructured: core API reference, adapter guides, styling guide | docs reviewed |
-| 4 | Packaging as `search-builder`: library build with `d.ts`; entry points per ADR-0006 (one package, subpath exports); rename `FilteredSearch`/`useFilteredSearch` to `SearchBuilder`/`useSearchBuilder`; the demo becomes private | `npm pack` installs into a scratch Vue app and a scratch React app |
+| 3 | Folded into Phase 4 (2026-09-17): the apiable bridge becomes `src/apiable/index.ts`, a factory with no demo data; the consumer README replaces the docs restructure for now | — |
+| 4 | Packaging as `search-builder` 0.1.0: library build (`dist-lib`) with `d.ts`, entry points per ADR-0006, rename to `SearchBuilder`/`useSearchBuilder`/`createSearchBuilder`, consumer README, CHANGELOG, `ci.yml` + `release.yml` (trusted publishing) | `npm test` includes `test:pack`: the tarball installs and runs in a scratch Vue app and a scratch React app, types resolve |
 
 Phase 1 is the one that decides everything else. Phases 2–4 are mechanical once the core exists.
 

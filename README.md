@@ -1,159 +1,130 @@
-# Filtered Search
+# search-builder
 
-A token search bar — filter, operator, value — built with Vue 3 `<script setup>`, focused on accessibility.
-**Headless**: the behaviour and the ARIA live in a composable and are handed out as prop getters,
-so any markup can carry them.
+**Headless tools for building advanced search experiences.**
 
-```
-npm install
-npm run dev
-npm test
-```
+A token/chip search bar — filter, operator, value — with the behaviour, the keyboard handling
+and every `aria-*` attribute living in a framework-agnostic core, handed out as **prop getters**.
+A Vue composable and a React hook adapt it to their framework; you supply the markup, and either
+the plain stylesheet that ships alongside it or none at all.
 
-Taking this to another project, or fixing a selector you already have?
-**[docs/headless-filtered-search.md](docs/headless-filtered-search.md)** is a self-contained
-implementation plan: the full contract, every bug this hit and why, and a retrofit checklist
-ordered by impact.
+> **Pre-1.0.** The public API (option names, getter shapes, the `apiable` factory) can still move
+> between minor versions until `1.0.0`. The `data-fs` / `fs-<n>-*` / `--fs-*` / `.fs-*` styling
+> contract described below is stable regardless — every getter and every stylesheet is written
+> against it, and the test suites are the enforcement.
 
 ## Demos
 
-`npm run dev` (or `npm run build` + `npm run preview`) serves three pages, linked from a shared
-nav:
-
 | Page | What it shows |
 | --- | --- |
-| `index.html` | The styled bar, in Tailwind — `src/components/FilteredSearch.vue`. |
-| `headless.html` | The same behaviour, unstyled, in Vue — `src/components/HeadlessSearch.vue`. |
-| `react.html` | The same behaviour again, in React, over the plain stylesheet with no Tailwind and no Vue — `src/components/ReactSearch.tsx`. |
+| [Styled (Vue)](https://pepebits.github.io/search-builder/) | The Tailwind bar, `src/components/SearchBuilder.vue`. |
+| [Headless (Vue)](https://pepebits.github.io/search-builder/headless.html) | The same behaviour, no stylesheet at all, `src/components/HeadlessSearch.vue`. |
+| [React](https://pepebits.github.io/search-builder/react.html) | The same behaviour again, in React, over the plain stylesheet — no Tailwind, no Vue, `src/components/ReactSearch.tsx`. |
 
-`npm run build` builds all three into `dist/`. The GitHub Pages workflow
-(`.github/workflows/pages.yml`) builds the same way with `BASE_PATH=/search-builder/`, which
-`vite.config.js` reads as its `base` — set that variable to deploy under a subpath yourself.
+## Install
 
-## Headless usage
+```
+npm install search-builder
+```
 
-`useFilteredSearch` owns the state, the keyboard, the live region and every `aria-*`. It gives
-back **prop getters** — objects of attributes and handlers to spread with `v-bind`.
+Plus whichever peer the entry you use needs — all optional, so installing the core alone pulls in
+nothing else:
+
+```
+npm install vue                # for search-builder/vue
+npm install react react-dom    # for search-builder/react
+npm install flex-url           # for search-builder/apiable
+```
+
+Requires Node 18+ at build time (ESM, `exports` map with subpaths).
+
+## Quick start
+
+### Vue
 
 ```vue
 <script setup>
-const s = useFilteredSearch({tokens, filters, label, resultCount})
+import { computed } from 'vue'
+import { useSearchBuilder } from 'search-builder/vue'
+import 'search-builder/styles.css'
+
+const props = defineProps({ filters: { type: Array, required: true } })
+const tokens = defineModel({ type: Array, default: () => [] })
+
+const s = useSearchBuilder({ tokens, filters: computed(() => props.filters), label: 'Search issues' })
 </script>
 
 <template>
-  <section v-bind="s.getRootProps()">
-    <label v-bind="s.getLabelProps()">{{ label }}</label>
+  <div v-bind="s.getRootProps()">
+    <label v-bind="s.getLabelProps()">Search issues</label>
 
-    <ol v-bind="s.getTokenListProps()">
-      <li v-for="t in tokens" v-bind="s.getTokenProps(t)" :key="t.id">
-        {{ s.tokenLabel(t) }}
-        <button v-bind="s.getOperatorProps(t)">{{ s.chipOperator(t) }}</button>
-        <button v-bind="s.getValueProps(t)">{{ s.chipValues(t) }}</button>
-        <button v-bind="s.getRemoveProps(t)">x</button>
-      </li>
-    </ol>
-
-    <input v-bind="s.getInputProps()">
+    <div v-bind="s.getFieldsetProps()">
+      <input v-bind="s.getInputProps()">
+    </div>
 
     <div v-bind="s.getListboxProps()">
       <div v-for="g in s.indexedGroups.value" v-bind="s.getGroupProps(g)" :key="g.id">
         <b aria-hidden="true">{{ g.label }}</b>
         <span v-for="o in g.options" v-bind="s.getOptionProps(o)" :key="o.id">{{ o.label }}</span>
       </div>
-      <p v-if="s.status.value" v-bind="s.getStatusRowProps()">{{ s.status.value.text }}</p>
     </div>
 
     <p v-bind="s.getHintProps()">Arrow keys browse, Enter selects.</p>
     <p v-bind="s.getAppliedProps()">{{ s.appliedSummary.value }}</p>
     <p v-bind="s.getLiveRegionProps()">{{ s.announcement.value }}</p>
-  </section>
+  </div>
 </template>
 ```
 
-That is `src/components/HeadlessSearch.vue` in full — 60 lines, no stylesheet, and it passes the
-same 32 accessibility cases as the styled bar (`npm run test:headless`).
+That's a trimmed [`HeadlessSearch.vue`](src/components/HeadlessSearch.vue) — 60 lines in full,
+no stylesheet, and it passes the same accessibility suite as the Tailwind bar
+([`SearchBuilder.vue`](src/components/SearchBuilder.vue)).
 
-### Options
+### React
 
-| Option | Notes |
-| --- | --- |
-| `tokens` | Required. The `v-model` ref the composable reads and writes. |
-| `filters` | Required. Definitions, or a ref/computed of them. |
-| `label` | Names the search landmark and the input. |
-| `resultCount` | When given, announcements end with the new count. |
-| `friendlyOperators` | Draw operators as words rather than symbols. |
-| `onSubmit` | Called with the tokens when the search runs. |
-| `onAnnounce` | Extra sink for live-region sentences, if you want to log them. |
-| `recentLimit` | How many "Recently used" values to keep. Default 3. |
+```tsx
+import { useSearchBuilder } from 'search-builder/react'
+import 'search-builder/styles.css'
 
-### Getters
+function Search ({ filters, tokens, onTokensChange }) {
+  const s = useSearchBuilder({ filters, tokens, onTokensChange, label: 'Search issues' })
 
-`getRootProps` `getLabelProps` `getInputProps` `getFieldsetProps` · `getTokenListProps`
-`getTokenProps` `getOperatorProps` `getValueProps` `getRemoveProps` · `getListboxProps`
-`getGroupProps` `getOptionProps` `getStatusRowProps` · `getHintProps` `getAppliedProps`
-`getLiveRegionProps` · `getApplyProps` `getDiscardProps` `getClearProps` `getSubmitProps`
+  return (
+    <div {...s.getRootProps()}>
+      <label {...s.getLabelProps()}>Search issues</label>
 
-Render options from `indexedGroups`, not `groups`: each option carries the position that its id
-and `aria-activedescendant` are built from. Write your own `:key`; the getters do not set one.
+      <div {...s.getFieldsetProps()}>
+        <input {...s.getInputProps()} />
+      </div>
 
-## Styling — Tailwind
+      <div {...s.getListboxProps()}>
+        {s.indexedGroups.map((g) => (
+          <div {...s.getGroupProps(g)} key={g.id}>
+            <b aria-hidden="true">{g.label}</b>
+            {g.options.map((o) => <span {...s.getOptionProps(o)} key={o.id}>{o.label}</span>)}
+          </div>
+        ))}
+      </div>
 
-Tailwind v4 is the default. `@tailwindcss/vite` is in every Vite config and
-`src/styles/tailwind.css` is the entry.
-
-The palette stays in `src/styles/tokens.css` and `@theme inline` only re-publishes those custom
-properties under Tailwind's names:
-
-```css
-@theme inline {
-  --color-surface: var(--fs-surface);
-  --color-chip:    var(--fs-chip-bg);
-  --color-accent:  var(--fs-accent);
+      <p {...s.getHintProps()}>Arrow keys browse, Enter selects.</p>
+      <p {...s.getAppliedProps()}>{s.appliedSummary}</p>
+      <p {...s.getLiveRegionProps()}>{s.announcement}</p>
+    </div>
+  )
 }
 ```
 
-So `bg-surface` resolves to `var(--fs-surface)`, which already switches with the theme — **there
-is not one `dark:` variant in the component**. Re-theme by redefining the tokens; every utility
-that reads them follows.
+The full version, with operators, values and remove buttons, is
+[`src/components/ReactSearch.tsx`](src/components/ReactSearch.tsx).
 
-### State variants
+### Bring your own CSS
 
-The state is already in the DOM for the accessibility tree, so Tailwind can see it. Five custom
-variants in `tailwind.css` name the ones worth reading:
+Both quick starts above import `search-builder/styles.css` — the `--fs-*` design tokens plus a
+plain stylesheet, every selector an attribute selector. Drop that import for the fully unstyled
+shape (the [headless demo](https://pepebits.github.io/search-builder/headless.html) does exactly
+that); `search-builder/tokens.css` alone gets you just the palette to re-theme.
 
-| Variant | Matches | Means |
-| --- | --- | --- |
-| `state-active:` | `[data-active="true"]` | the highlighted suggestion |
-| `state-chosen:` | `[aria-selected="true"]` | a chosen value, under a multi-value operator |
-| `state-editing:` | `[data-editing]` | the chip being changed |
-| `state-negated:` | `[data-negated]` | a filter that excludes |
-| `state-pending:` | `[data-pending]` | a filter still being built |
-| `state-busy:` | `[aria-busy="true"]` | the list, while values are being fetched |
-| `in-editing:` `in-negated:` `in-pending:` | an ancestor in that state | for a chip's inner parts |
-
-```html
-<li :class="'border border-chip-line state-editing:border-dashed'">
-  <span :class="'in-negated:bg-chip-not in-negated:text-chip-not-ink'">…</span>
-```
-
-Nothing is duplicated to make this work: if the component behaves differently, the CSS already
-knows, because the attribute it reads is the one a screen reader reads.
-
-### Two things that will bite you
-
-1. **Unlayered CSS beats utilities.** Tailwind v4 puts utilities in `@layer utilities`, and any
-   plain unlayered rule wins over a layered one *whatever the specificity*. A bare
-   `:focus-visible {}` in a page stylesheet silently overrode the component's `outline-none`
-   here. Keep page CSS on page selectors, or wrap it in a layer.
-2. **Arbitrary variants cannot nest brackets.** `[&_:focus-visible:not([data-fs=input])]:…` does
-   not parse — the inner `]` ends the variant. Put the utility on the element instead of
-   reaching for it from an ancestor.
-
-### Not using Tailwind
-
-`src/styles/filtered-search.css` is the same design as plain CSS, every selector an attribute
-selector. Drop the utility classes from `FilteredSearch.vue`, import that file, and you get the
-identical result. Both work because the contract is the attributes, not the classes:
+Either way, nothing is keyed off a class name — the contract is these attributes, and the test
+suites are written against them, not against any markup:
 
 | Part (`data-fs`) | State it carries |
 | --- | --- |
@@ -167,136 +138,78 @@ identical result. Both work because the contract is the attributes, not the clas
 | `status` | `data-kind`: loading / no-matches / empty |
 | `apply` `clear` `submit` `discard` | actions; render the ones you want |
 
-A `classNames` prop would have been a second copy of this state, synced by hand and wrong the day
-the two diverge. The accessible attributes cannot drift — if they did, the component would be
-broken for a screen reader first, and the tests catch that.
+Every id an instance mints is scoped under `fs-<n>-*` (or your own `id` option), and a person's
+avatar tint reads `--fs-tone-h` off `toneHue()`. None of the four are renamed between now and
+`1.0.0`.
 
-## Files
+## Filter definitions
 
-**Core / adapters:** the behaviour has moved out of the Vue composable and into a
-framework-agnostic `src/core/` with thin per-framework adapters (`src/vue/` today, `src/react/`
-later) — see [`docs/plan/headless-package.md`](docs/plan/headless-package.md) for the phased
-plan and the ADRs it links to. The table below still describes the pre-split layout in one row
-(`src/composables/...`, now `src/core/` + `src/vue/`); it will catch up as the later phases land.
+```ts
+interface FilterDef {
+  key: string                                   // stable, unique per bar
+  label: string                                 // "Milestone"
+  param?: string                                 // wire attribute name, defaults to key
+  operators: Operator[]
+  values?: Value[]                               // a closed set, offered directly
+  fetchValues?: (query: string) => Promise<Value[]>  // an open set, fetched as you type
+  specialValues?: Value[]                        // "None" / "Any" / "Me", offered first
+  repeatable?: boolean                           // can appear as more than one token
+  freeValue?: boolean                            // the value stage also accepts typed text
+  kind?: string                                  // presentation hint (e.g. "person")
+}
 
-| Path | What it holds |
-| --- | --- |
-| `src/composables/useFilteredSearch.js` | Everything: the three-stage state machine, the option list, the live region, the keyboard, and the prop getters. |
-| `src/components/FilteredSearch.vue` | The styled bar. Markup and CSS over the getters — no ARIA of its own. |
-| `src/components/HeadlessSearch.vue` | The unstyled example, and what `npm run test:headless` drives. |
-| `src/lib/apiable.js` | tokens ↔ flex-url; `schemaFor` derives the apiable `EndpointSchema` a backend would publish. |
-| `src/components/DebugPanel.vue` | demo only: backend schema, filter definitions, tokens, request, core state, announcements. |
-| `src/components/IssueList.vue` | Result rows for the demo. |
-| `src/data/filters.js` | Filter definitions. Add a filter here, not in the component. |
-| `src/data/issues.js` | Sample issues, the token matcher, and sort orders. |
-| `src/styles/tailwind.css` | Tailwind entry: `@theme` mapping and the state variants. |
-| `src/styles/tokens.css` | The `--fs-*` palette, light and dark. The one thing to re-theme. |
-| `src/styles/filtered-search.css` | The same design in plain CSS, for projects without Tailwind. |
-| `src/styles.css` | Demo page only. |
+interface Operator {
+  value: string        // the wire key: "equal", "like", "in", ...
+  symbol?: string       // "=", "~", "≥" — what a chip draws
+  description: string  // "is", "contains" — what a screen reader reads
+  multiple?: boolean    // the value stage accumulates values into one token
+  negated?: boolean     // styles the chip's operator cell as excluding
+}
 
-## Using it
+interface Value {
+  value: string
+  label: string
+  color?: string
+  initials?: string
+  avatar?: string
+  sub?: string
+  special?: boolean
+}
 
-```vue
-<FilteredSearch v-model="tokens" :filters="FILTERS" label="Search issues" @submit="run" />
+type Token =
+  | { id: string; type: 'text'; operator: string; value: string }
+  | { id: string; type: string; operator: string; value: string | string[] }
 ```
 
-- `v-model` — array of `{ id, type, operator, value }`. Free text is a token of type `text` with operator `~`.
-- `filters` — see the shape documented at the top of `src/data/filters.js`. A definition with one operator skips the operator stage.
-- `@submit` — fires on Enter when no suggestion is highlighted.
-- Exposed via template ref: `focus()` and `compiled` (the tokens as query-string parts).
+All of the above — plus `Stage`, `Option`, `OptionGroup`, `SearchBuilderOptions`,
+`SearchBuilderStore` and the rest of the getter/action surface — are exported as types from
+`search-builder` (the root entry), so `search-builder/vue` and `search-builder/react` never need a
+separate `@types` package.
 
-## Accessibility notes
+## `search-builder/apiable`
 
-- The input is the combobox (`role="combobox"`, `aria-expanded`, `aria-controls`); the suggestions are a sibling `role="listbox"`. Focus never leaves the input.
-- The listbox is **never removed from the DOM** — it closes with `hidden` — so `aria-controls` always resolves.
-- Highlighting sets `aria-activedescendant` and a `data-active` attribute. Under a multi-value operator the listbox is `aria-multiselectable` and `aria-selected` means *chosen*, not *highlighted*.
-- Each suggestion section is a `role="group"` with an `aria-label`; the visible heading is decorative because the group already carries the name.
-- Loading and empty rows sit **outside** the option set (`role="presentation"`), so an empty list never announces "1 of 1". Async filters set `aria-busy` and announce "Loading suggestions".
-- Operators carry a `description` per filter, so accessible names read "Label is one of a11y and regression" while the chip shows `||`.
-- `aria-describedby` on the input carries the keyboard hint **and** a sentence listing the filters already applied.
-- Chips are `role="list"` / `role="listitem"` explicitly — `display: contents` drops those roles in several engines.
-- Adding, removing, clearing, toggling a value, and discarding a draft all write to a `role="status"` live region, with the new result count when `result-count` is passed.
-- Sorting uses a native `<label>` + `<select>`; the bar sits in a labelled `role="search"` landmark.
-- A pending chip shows the filter being built with a `×` to discard it, and a *Search* button gives pointer users a way to submit.
+Tokens ↔ a [`flex-url`](https://www.npmjs.com/package/flex-url) query string — the Laravel Apiable
+grammar. Nothing here hand-builds a URL, and this is the only entry that touches `flex-url`; the
+core and the adapters know nothing about it.
 
-## Keyboard
+```ts
+import { createApiable } from 'search-builder/apiable'
 
-| Key | Single value | Multi-value operator (`||`, `!=`) |
-| --- | --- | --- |
-| `↓` `↑` | Move through suggestions, across groups | same |
-| `Enter` | Take the suggestion, advance a stage | Toggle the value, list stays open |
-| `Tab` | Leave the bar | Apply the chosen values, then leave |
-| `→` (empty field) | — | Apply the chosen values, stay in the bar |
-| `Esc` | Step back a stage | Clear chosen values, then step back |
-| `Backspace` | On empty text: step back, or remove the last chip | same |
-| `Home` / `End` | First / last suggestion | same |
-| `Space` | On a chip's operator or value: re-open just that part | same |
+const apiable = createApiable({
+  filters: FILTERS,        // FilterDef[]
+  path: '/api/v1/issues',  // defaults to '/'
+  sorts: SORTS,            // optional: { value, attribute, direction }[]
+  resource: 'issues'       // defaults to the last path segment of `path`
+})
 
-## Tests
-
-```
-npm test              # all four suites
-npm run test:url      # the flex-url boundary, no DOM
-npm run test:logic    # jsdom
-npm run test:browser  # Chromium, the styled bar
-npm run test:headless # Chromium, the unstyled example
+apiable.tokensToUrl(tokens, { sort })     // -> FlexUrl (immutable)
+apiable.urlToTokens(url)                  // -> { tokens, sort, url }
+apiable.requestUri(tokens, { sort })      // -> "/api/v1/issues?filter[...]=..."
+apiable.requestParams(tokens, { sort })   // -> the same request, as flex-url's nested object
+apiable.schema()                          // -> the EndpointSchema apiable's exporter would publish
 ```
 
-- `tests/url.mjs` — 18 cases over `src/lib/apiable.js`: every operator's wire form, the round
-  trip, the encoding contract, and that unknown filters are dropped rather than crashed on.
-
-- `tests/interaction.mjs` — 47 cases in **jsdom**. Fast, good for state and ARIA wiring.
-- `tests/headless.mjs` — 32 cases in **Chromium** against `HeadlessSearch.vue`. The point of
-  these: if an ARIA invariant hides in the styled markup instead of the composable, they fail.
-- `tests/browser.mjs` — 63 cases in **Chromium** via Playwright. Needed for anything involving
-  pointers or focus. jsdom does not run a microtask checkpoint between event listeners, and that
-  is exactly where the mouse-selection bug lived: the outside-click check ran in the bubble
-  phase, after Vue had re-rendered and detached the clicked node, so `contains()` reported
-  "outside" and closed the list on every mouse selection. **Anything touching pointer or focus
-  behaviour must be tested in `tests/browser.mjs` — jsdom will pass it wrongly.**
-
-First run needs the browser: `npx playwright install chromium`.
-
-jsdom does not put `TextDecoder`/`TextEncoder` on its `window`, and flex-url uses them for its
-UTF-8 decoding contract; `tests/interaction.mjs` injects them in `beforeParse`. Real browsers
-have them.
-
-## Editing a filter already in the bar
-
-Focus the **part** you want to change, press `Space` (or `Enter`). The
-operator and the value are separate buttons, because wanting a different operator is not wanting
-a different value.
-
-- **Changing the operator is one step.** Pick a new one and the chip commits immediately, keeping
-  the value it had. `carryValues()` decides: the value list opens only when the value genuinely
-  cannot carry — more than one value under an operator that takes one, or a `None`/`Any` special
-  under a multi-value operator.
-- **Changing the value** opens the value list with what the chip already holds ticked.
-- The chip is **edited in place**: same id, same position, showing the change live. Nothing is
-  removed and re-added, so nothing jumps to the end of the bar.
-- `Esc` cancels the edit outright — not "clear the chosen values first" — and returns focus to
-  the part it came from. The original was never touched.
-- A filter with one operator draws it as plain text: nothing to choose, nothing to land on.
-- Free-text chips have no operator or value list, so they are only removable.
-
-Buttons carry `data-token="<id>"` and `data-edit="operator" | "value"`.
-
-Composable surface: `editingId`, `startEdit(id, part)` and `carryValues(values, operator, def)`.
-
-## flex-url
-
-The query string is [`flex-url`](https://www.npmjs.com/package/flex-url)'s — the Laravel Apiable
-grammar. Nothing in this project hand-builds a URL.
-
-`src/lib/apiable.js` is the whole boundary:
-
-```js
-tokensToUrl(tokens, {path, sort})  // -> FlexUrl (immutable)
-urlToTokens(url)                   // -> {tokens, sort, url}
-requestUri(tokens, {sort})         // -> "/api/v1/issues?filter[...]=..."
-```
-
-Operator mapping — a token's `operator` **is** the apiable key, so there is no translation table:
+A token's `operator` **is** the apiable wire key, so there is no separate translation table:
 
 | Token operator | Wire | Chip shows | Spoken |
 | --- | --- | --- | --- |
@@ -307,72 +220,88 @@ Operator mapping — a token's `operator` **is** the apiable key, so there is no
 | `gte` / `lt` | `filter[updated_at][gte]=…` | `≥` / `<` | "on or after" / "before" |
 | (free text) | `q=hydration` | — | — |
 
-`in` is our marker for apiable's plain, bracket-less entry — the only one that takes a value list.
-
-The bar **restores itself from the address bar**: `App.vue` parses `window.location.href` on
-setup and pushes every change back with `replaceState`, using the same builder with a different
-`path`. A filtered view is a link you can send someone.
+`in` is the marker for apiable's plain, bracket-less entry (`filter[attr]=a,b`) — the only one that
+takes a value list.
 
 ### Negation
 
-flex-url 3 added apiable's `not_equal` and `not_like` to the grammar, and the demo uses the second
-one: *Title does not contain* goes on the wire as `filter[title][not_like]=focus`. The backend has
-to register the operator for the attribute like any other — an unregistered key is dropped, not
-applied — so check the server side before offering it.
-
-An operator definition marked `negated: true` sets `data-negated` on the chip, which colours the
-operator cell only — a plum background and ink on the operator itself, nothing else on the chip.
-(There is no `.fs-token--not` class; the hooks are the `[data-negated]` attribute and the
-`state-negated:` / `in-negated:` Tailwind variants.) The chip's outer border, key and value stay
-neutral on purpose: painting the whole chip a warm colour reads as a validation error, not as
-"this filter excludes".
-
-### Typed values
-
-A filter with `freeValue: true` takes whatever is typed at the value stage: the text is offered
-first as *Use “…”*, so Enter means "use my text", and matching suggestions follow. *Title* is the
-example — its three suggestions are a head start, not the vocabulary.
+flex-url 3 added apiable's `not_equal` and `not_like` to the grammar. The backend has to register
+the operator for the attribute like any other — an unregistered key is dropped, not applied — so
+check the server side before offering it. An operator marked `negated: true` sets `data-negated`
+on the chip, which tints only the operator cell (`.fs-token--not`-equivalent styling in
+`filtered-search.css`), not the whole chip: painting the whole thing a warm colour reads as a
+validation error, not as "this filter excludes".
 
 ### Commas
 
-flex-url 3 treats a comma as a list separator whether it arrives raw or as `%2C`, because apiable
-explodes on it after decoding either way. A comma inside a single value is therefore not
-representable; it comes back as two values, and `like` reads that as "contains either".
+flex-url 3 treats a comma as a list separator whether it arrives raw or percent-encoded (`%2C`),
+because apiable explodes on it after decoding either way. A comma inside a single value is
+therefore not representable — it comes back as two values, and `like` reads that as "contains
+either".
 
-## Chip colours
+## Keyboard
 
-Colour on a chip encodes one property and one only: whether the filter **excludes**.
-
-| State | Looks like | Tokens |
+| Key | Single value | Multi-value operator |
 | --- | --- | --- |
-| Applied, includes | Neutral ground, key on its own tint | `--fs-chip-bg`, `--fs-chip-key-bg` |
-| Applied, excludes | Neutral chip; only the operator cell gets a plum tint — dormant, see above | `--fs-chip-not-*` |
-| Being built or edited | Dashed edge | `.fs-token--pending`, `.fs-token--editing` |
-| Being edited right now | Dashed **accent** edge, accent key | `--fs-accent*` |
+| `↓` `↑` | Move through suggestions, across groups | same |
+| `Enter` | Take the suggestion, advance a stage | Toggle the value, list stays open |
+| `Tab` | Leave the bar | Apply the chosen values, then leave |
+| `→` (empty field) | — | Apply the chosen values, stay in the bar |
+| `Esc` | Step back a stage | Clear chosen values, then step back |
+| `Backspace` | On empty text: step back, or remove the last chip | same |
+| `Home` / `End` | First / last suggestion | same |
+| `Space` | On a chip's operator or value: re-open just that part | same |
 
-Two rules to keep if you change this:
+## Accessibility
 
-- **Colour is never the only signal.** The `!=` symbol is on the chip and the accessible name
-  says "is not one of". Remove the hue and nothing is lost.
-- **The accent means "this one".** It is reserved for the chip under edit and the highlighted
-  suggestion. Spending it on every chip is what made it meaningless before.
+- The input is the combobox (`role="combobox"`, `aria-expanded`, `aria-controls`); the suggestions
+  are a sibling `role="listbox"`, **never removed from the DOM** (it closes with `hidden`), so
+  `aria-controls` always resolves. Focus never leaves the input.
+- Highlighting sets `aria-activedescendant` and `data-active`. Under a multi-value operator the
+  listbox is `aria-multiselectable` and `aria-selected` means *chosen*, not *highlighted*.
+- Each suggestion section is a `role="group"` with an `aria-label` — the visible heading is
+  decorative, the group already carries the name.
+- Loading and empty rows sit **outside** the option set (`role="presentation"`), so an empty list
+  never announces "1 of 1"; async filters set `aria-busy` and announce "Loading suggestions".
+- `aria-describedby` on the input carries the keyboard hint **and** a sentence listing the filters
+  already applied.
+- Chips are `role="list"` / `role="listitem"` explicitly, since `display: contents` drops those
+  roles in several engines.
+- Every state change that matters is written to a `role="status"` live region: adding, removing,
+  clearing, toggling a value, discarding a draft, each optionally suffixed with a result count
+  (the `resultCount` option).
 
-The bar draws a single focus ring: `.fs-field input:focus-visible` is explicitly `outline: none`
-because `.fs-bar:focus-within` already shows it. Every other control keeps its outline.
+## Architecture
 
-## Behaviour rules worth knowing
+The behaviour, the ARIA and the prop getters live in a framework-agnostic `src/core/`; `src/vue/`
+and `src/react/` are thin adapters over it, and `src/apiable/` is the only module that touches
+`flex-url`. The full design history — the extraction plan, what changed between phases, and why —
+is in [`docs/plan/headless-package.md`](docs/plan/headless-package.md) and the decisions in
+[`docs/adr/`](docs/adr/); [`docs/headless-filtered-search.md`](docs/headless-filtered-search.md) is
+the original, self-contained implementation write-up (contract, every bug it hit, and a retrofit
+checklist) from before the framework-agnostic split.
 
-- The list opens on **click**, on the **arrow keys** and on **typing** — never on focus alone.
-  Refocusing the input after Search, after removing a chip, or after discarding a draft must
-  not reopen it.
-- **Search** closes the list, and first turns any term still in the field into a free-text chip.
-- **Clear all** deliberately reopens the list: the next thing you do is filter again.
-- A multi-value draft with at least one value ticked is **auto-confirmed** by any gesture that
-  means "done picking": `Tab`, `→` on an empty field, a pointer down outside the bar, or focus
-  leaving it. Nothing is chosen yet? Nothing is committed. Committing resets the draft, so `Tab`
-  followed by the `focusout` it causes commits once, never twice.
-- Outside-click detection is scoped to the search area, listens on `pointerdown`, and runs in
-  the **capture phase** — see the note under Tests for why the bubble phase is wrong here.
-  `focusout` alone also misses clicks on things that take no focus, like a result row.
-- Chips come before the field in reading order, so Tab reaches their parts first: operator,
-  value, remove, per chip.
+## Development
+
+```
+git clone https://github.com/Pepebits/search-builder.git
+cd search-builder
+npm install
+npm run dev     # the three demo pages, at http://localhost:5173
+npm test        # typecheck + every suite, including the packed-tarball proof
+```
+
+| Script | What it does |
+| --- | --- |
+| `npm run dev` / `npm run build` / `npm run preview` | The demo site (three pages) — `vite.config.js`, outputs to `dist/`. |
+| `npm run build:lib` | The publishable package — declarations, the four JS entries and the CSS, into `dist-lib/`. Runs automatically before `npm pack`/`npm publish` (`prepack`). |
+| `npm run typecheck` | `vue-tsc --noEmit` over `src` and `tests`. |
+| `npm test` | Every suite in order: `test:url`, `test:core`, `test:logic` (jsdom), `test:browser` (Chromium, styled), `test:headless` (Chromium, unstyled), `test:react` (Chromium), `test:pack` (packs the tarball, installs it into a scratch Vue app and a scratch React app, builds and drives both with Playwright). |
+| `npm run test:pack` | Just the packed-tarball proof, on its own. |
+
+`npm run build` (the Pages workflow) and `npm run build:lib` (the npm package) are independent:
+one always outputs `dist/`, the other always outputs `dist-lib/`, and neither script touches the
+other's directory.
+
+The first Chromium-based run on a machine needs the browser installed once:
+`npx playwright install chromium`.
