@@ -1,0 +1,204 @@
+/*
+ * The styled bar.
+ *
+ * Every selector is an attribute selector, because the state is already in the
+ * DOM: the accessibility tree needs `aria-expanded`, `aria-selected`,
+ * `aria-busy` and `hidden` anyway, and the prop getters add `data-fs` for the
+ * part and `data-active` / `data-editing` / `data-negated` / `data-pending`
+ * for the rest. So there is no class API to learn and no JS state copied into
+ * class names — if the component behaves differently, CSS already knows.
+ *
+ * Needs the custom properties in ./tokens.css. Import both, or define your own.
+ */
+
+/* --- the field ------------------------------------------------------- */
+
+[data-fs='root'] { position: relative; }
+[data-fs='root'] :focus-visible {
+  outline: 2px solid var(--fs-accent); outline-offset: 2px; border-radius: 3px;
+}
+
+[data-fs='bar'] {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  background: var(--fs-surface-3); border: 1px solid var(--fs-line-strong);
+  border-radius: 6px; padding: 5px 6px; cursor: text;
+}
+[data-fs='bar']:focus-within {
+  border-color: var(--fs-accent); box-shadow: 0 0 0 3px var(--fs-accent-soft);
+}
+
+[data-fs='input'] {
+  width: 100%; min-height: 30px; padding: 6px 4px; border: 0;
+  background: transparent; font: inherit; font-size: 14.5px; color: var(--fs-ink);
+}
+[data-fs='input']::placeholder { color: var(--fs-ink-3); }
+/* The bar draws one focus ring; a second inside it reads as a smudge. */
+[data-fs='input']:focus-visible { outline: none; }
+
+/* --- chips ----------------------------------------------------------- */
+
+[data-fs='tokens'] { display: contents; list-style: none; margin: 0; padding: 0; }
+
+[data-fs='token'] {
+  display: flex; align-items: center; max-width: 100%; overflow: hidden;
+  background: var(--fs-chip-bg); border: 1px solid var(--fs-chip-line);
+  border-radius: 4px; font-size: 13px;
+}
+[data-fs='token'] .fs-key {
+  padding: 3px 8px; font-weight: 600; white-space: nowrap;
+  color: var(--fs-chip-key-ink); background: var(--fs-chip-key-bg);
+  border-right: 1px solid var(--fs-chip-line);
+  align-self: stretch; display: flex; align-items: center;
+}
+[data-fs='operator'] {
+  font-family: var(--fs-mono); font-size: 12px; padding: 3px 6px;
+  white-space: nowrap; color: var(--fs-chip-op);
+  border-right: 1px solid var(--fs-chip-line);
+}
+[data-fs='value'] {
+  padding: 3px 8px; font-family: var(--fs-mono); font-size: 12.5px;
+  color: var(--fs-chip-ink); white-space: nowrap; overflow: hidden;
+  text-overflow: ellipsis; max-width: 24ch;
+}
+[data-fs='token'][data-type='text'] { padding: 3px 8px; color: var(--fs-chip-ink); }
+
+/* Buttons inside a chip: each part is its own hit area, so what you click is
+   what you change. */
+button[data-fs='operator'],
+button[data-fs='value'] {
+  border: 0; margin: 0; background: transparent; color: inherit; cursor: pointer;
+  align-self: stretch; display: flex; align-items: center; min-width: 0; font: inherit;
+}
+button[data-fs='operator']:hover,
+button[data-fs='value']:hover { background: var(--fs-chip-hover); }
+/* The button is a flex box, so the ellipsis has to live on the text itself. */
+button[data-fs='operator'] > span,
+button[data-fs='value'] > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+[data-fs='remove'] {
+  flex: none; align-self: stretch; display: flex; align-items: center;
+  border: 0; border-left: 1px solid var(--fs-chip-line); background: transparent;
+  color: var(--fs-chip-op); padding: 3px 7px; font-size: 14px; line-height: 1; cursor: pointer;
+}
+[data-fs='remove']:hover { background: var(--fs-chip-hover); color: var(--fs-chip-ink); }
+
+/* Negation colours the operator cell only; the rest of the chip stays neutral
+   so it never reads as a validation error. */
+[data-fs='token'][data-negated] .fs-key { border-right-color: var(--fs-chip-not-line); }
+[data-fs='token'][data-negated] [data-fs='operator'] {
+  background: var(--fs-chip-not-bg); color: var(--fs-chip-not-ink); font-weight: 600;
+  border-right-color: var(--fs-chip-not-line);
+}
+
+/* Dashed means provisional; the accent means this is the one you are on. */
+[data-fs='token'][data-editing] { border-color: var(--fs-accent); border-style: dashed; }
+[data-fs='token'][data-editing] .fs-key {
+  background: var(--fs-accent-soft); color: var(--fs-accent-ink);
+  border-right-color: var(--fs-accent-line);
+}
+[data-fs='token'][data-editing] [data-fs='operator'] {
+  color: var(--fs-accent-ink); border-right-color: var(--fs-accent-line);
+}
+[data-fs='token'][data-editing] [data-fs='value'] { color: var(--fs-ink-3); }
+[data-fs='token'][data-editing] [data-fs='remove'] { border-left-color: var(--fs-accent-line); }
+
+[data-fs='token'][data-pending] { background: var(--fs-surface-3); border-style: dashed; }
+[data-fs='token'][data-pending] .fs-key { background: transparent; border-right-style: dashed; }
+[data-fs='token'][data-pending] [data-fs='operator'] { border-right-style: dashed; }
+[data-fs='token'][data-pending] [data-fs='value'] { color: var(--fs-ink-3); }
+[data-fs='token'][data-pending] [data-fs='discard'] { border-left-style: dashed; }
+
+/* --- the suggestion list --------------------------------------------- */
+
+[data-fs='listbox'] {
+  position: absolute; z-index: 20; top: calc(100% + 6px); left: 0;
+  /* A menu, not a table: as wide as the bar only when the bar is narrow. */
+  width: min(100%, 520px);
+  max-height: 300px; overflow-y: auto; margin: 0; padding: 5px; list-style: none;
+  background: var(--fs-surface); border: 1px solid var(--fs-line-strong);
+  border-radius: 6px; box-shadow: var(--fs-shadow);
+}
+/* It is never removed from the DOM — aria-controls has to resolve while closed. */
+[data-fs='listbox'][hidden] { display: none; }
+
+[data-fs='group'] + [data-fs='group'] {
+  border-top: 1px solid var(--fs-line); margin-top: 4px; padding-top: 4px;
+}
+[data-fs='group'] .fs-group-name {
+  margin: 0; font-family: var(--fs-mono); font-size: 10.5px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--fs-ink-3); padding: 6px 9px 4px;
+}
+
+[data-fs='option'] {
+  display: flex; align-items: center; gap: 9px; padding: 7px 9px;
+  border-radius: 4px; font-size: 14px; cursor: pointer;
+}
+[data-fs='option'][data-active='true'] {
+  background: var(--fs-accent-soft);
+}
+[data-fs='option'][aria-selected='true'] .fs-check { color: var(--fs-accent-ink); }
+
+[data-fs='status'] { padding: 10px 9px; font-size: 13px; color: var(--fs-ink-3); }
+
+/* --- actions --------------------------------------------------------- */
+
+[data-fs='clear'], [data-fs='apply'], [data-fs='submit'] {
+  font: inherit; font-size: 12.5px; border-radius: 4px; padding: 5px 10px; cursor: pointer;
+}
+[data-fs='clear'] { border: 0; background: transparent; color: var(--fs-ink-3); }
+[data-fs='clear']:hover { background: var(--fs-surface-2); color: var(--fs-ink); }
+[data-fs='apply'] {
+  border: 1px solid var(--fs-accent); background: var(--fs-accent-soft);
+  color: var(--fs-accent-ink); font-weight: 600;
+}
+[data-fs='submit'] {
+  border: 1px solid var(--fs-line-strong); background: var(--fs-surface); color: var(--fs-ink-2);
+}
+[data-fs='submit']:hover { background: var(--fs-surface-2); color: var(--fs-ink); }
+
+/* --- text for screen readers only ------------------------------------ */
+
+[data-fs='label'], [data-fs='applied'], [data-fs='live'] {
+  position: absolute !important;
+  width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%);
+  white-space: nowrap; border: 0;
+}
+
+[data-fs='hint'] { font-size: 12px; color: var(--fs-ink-3); padding: 6px 4px 2px; margin: 0; }
+[data-fs='hint'] kbd {
+  font-family: var(--fs-mono); font-size: 11px; padding: 1px 4px; border-radius: 3px;
+  background: var(--fs-surface-2); border: 1px solid var(--fs-line);
+  border-bottom-width: 2px; color: var(--fs-ink-2);
+}
+
+/* --- the bar's own decoration ---------------------------------------- */
+
+.fs-combo { position: relative; }
+.fs-icon { flex: none; margin: 0 2px 0 4px; color: var(--fs-ink-3); }
+.fs-field { flex: 1 1 150px; min-width: 110px; display: flex; }
+.fs-actions { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+/* Trailing, like a menu: the left edge stays aligned whether or not a row is chosen. */
+.fs-check { margin-left: auto; width: 14px; flex: none; font-size: 13px; color: transparent; }
+.fs-sym { font-family: var(--fs-mono); font-size: 12px; color: var(--fs-clay); min-width: 22px; }
+.fs-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+/* Tinted initials: set `--fs-tone-h` per person (see `toneHue`); the theme
+   supplies lightness and chroma. A real picture is `img.fs-av`. */
+.fs-av {
+  width: 22px; height: 22px; border-radius: 50%; flex: none; display: grid; place-items: center;
+  font-family: var(--fs-mono); font-size: 10px; font-weight: 600;
+  background: oklch(var(--fs-av-l) var(--fs-av-c) var(--fs-tone-h, 160));
+  color: oklch(var(--fs-av-ink-l) var(--fs-av-ink-c) var(--fs-tone-h, 160));
+}
+img.fs-av { object-fit: cover; }
+.fs-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The handle sits next to the name, where the eye already is. */
+.fs-sub {
+  font-family: var(--fs-mono); font-size: 12px; color: var(--fs-ink-3); padding: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.fs-hint-x { margin-left: auto; font-family: var(--fs-mono); font-size: 11.5px; color: var(--fs-ink-3); padding: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-fs='root'] * { transition: none !important; animation: none !important; }
+}

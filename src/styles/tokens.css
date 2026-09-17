@@ -1,0 +1,120 @@
+/*
+ * The palette the search bar reads. Import this, or define the same custom
+ * properties yourself — filtered-search.css only ever reads them.
+ */
+:root {
+  --fs-bg: #F2F4F3;
+  --fs-surface: #FFFFFF;
+  --fs-surface-2: #EAEEEC;
+  --fs-surface-3: #F7F9F8;
+  --fs-ink: #15201E;
+  --fs-ink-2: #42524E;
+  --fs-ink-3: #6D7C78;
+  --fs-line: #D7DEDB;
+  --fs-line-strong: #BCC7C3;
+  --fs-accent: #0B6E5F;
+  --fs-accent-ink: #07584C;
+  --fs-accent-soft: #DCEDE8;
+  --fs-accent-line: #9CCCC0;
+  --fs-clay: #A2503A;
+  --fs-ok: #2E7D32;
+  --fs-closed: #5E6C88;
+  --fs-shadow: 0 1px 2px rgba(21, 32, 30, .06), 0 8px 24px -12px rgba(21, 32, 30, .22);
+
+  /* Chips. Neutral by default; negation colours the operator cell only — the
+     rest of the chip stays neutral, so it never reads as a validation error. */
+  --fs-chip-bg: #FFFFFF;
+  --fs-chip-line: #C6D1CD;
+  --fs-chip-key-bg: #ECF1EF;
+  --fs-chip-key-ink: #3A4A47;
+  --fs-chip-ink: #15201E;
+  --fs-chip-op: #6D7C78;
+  --fs-chip-hover: #F1F5F3;
+  --fs-chip-not-bg: #EFE7F4;
+  --fs-chip-not-line: #CDB8DC;
+  --fs-chip-not-ink: #5E3A7E;
+
+  /* Avatars: one hue per person (`--fs-tone-h`, set on the element), these
+     per theme. Light tint, dark ink; the dark theme flips it. */
+  --fs-av-l: 92%;
+  --fs-av-c: 0.05;
+  --fs-av-ink-l: 38%;
+  --fs-av-ink-c: 0.11;
+  --fs-sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --fs-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fs-bg: #101715;
+    --fs-surface: #161F1D;
+    --fs-surface-2: #1E2926;
+    --fs-surface-3: #1A2422;
+    --fs-ink: #E4EAE7;
+    --fs-ink-2: #A9B7B3;
+    --fs-ink-3: #8A9995;
+    --fs-line: #26332F;
+    --fs-line-strong: #35443F;
+    --fs-accent: #3FBFA4;
+    --fs-accent-ink: #7FD9C4;
+    --fs-accent-soft: #123029;
+    --fs-accent-line: #265148;
+    --fs-clay: #DE9377;
+    --fs-ok: #5FB865;
+    --fs-closed: #93A0BC;
+    --fs-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 28px -14px rgba(0, 0, 0, .7);
+
+    --fs-chip-bg: #1C2724;
+    --fs-chip-line: #3A4A45;
+    --fs-chip-key-bg: #26332F;
+    --fs-chip-key-ink: #B9C7C3;
+    --fs-chip-ink: #E4EAE7;
+    --fs-chip-op: #8A9995;
+    --fs-chip-hover: #222E2A;
+    --fs-chip-not-bg: #33253F;
+    --fs-chip-not-line: #5A4470;
+    --fs-chip-not-ink: #CBA9E6;
+
+    --fs-av-l: 30%;
+    --fs-av-c: 0.06;
+    --fs-av-ink-l: 86%;
+    --fs-av-ink-c: 0.10;
+  }
+}
+
+:root[data-theme="dark"] {
+  --fs-bg: #101715;
+  --fs-surface: #161F1D;
+  --fs-surface-2: #1E2926;
+  --fs-surface-3: #1A2422;
+  --fs-ink: #E4EAE7;
+  --fs-ink-2: #A9B7B3;
+  --fs-ink-3: #8A9995;
+  --fs-line: #26332F;
+  --fs-line-strong: #35443F;
+  --fs-accent: #3FBFA4;
+  --fs-accent-ink: #7FD9C4;
+  --fs-accent-soft: #123029;
+  --fs-accent-line: #265148;
+  --fs-clay: #DE9377;
+  --fs-ok: #5FB865;
+  --fs-closed: #93A0BC;
+  --fs-shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 28px -14px rgba(0, 0, 0, .7);
+
+  --fs-chip-bg: #1C2724;
+  --fs-chip-line: #3A4A45;
+  --fs-chip-key-bg: #26332F;
+  --fs-chip-key-ink: #B9C7C3;
+  --fs-chip-ink: #E4EAE7;
+  --fs-chip-op: #8A9995;
+  --fs-chip-hover: #222E2A;
+  --fs-chip-not-bg: #33253F;
+  --fs-chip-not-line: #5A4470;
+  --fs-chip-not-ink: #CBA9E6;
+
+  --fs-av-l: 30%;
+  --fs-av-c: 0.06;
+  --fs-av-ink-l: 86%;
+  --fs-av-ink-c: 0.10;
+}
+

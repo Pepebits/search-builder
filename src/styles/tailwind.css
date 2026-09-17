@@ -1,0 +1,61 @@
+/*
+ * Tailwind, wired to the same palette the plain stylesheet uses.
+ *
+ * tokens.css owns light and dark; `@theme` only re-publishes those custom
+ * properties under Tailwind's names, so `bg-surface` resolves to
+ * `var(--fs-surface)` and follows the theme with no `dark:` variant anywhere.
+ * Redefine a token and every utility that reads it changes with it.
+ */
+@import 'tailwindcss';
+@import './tokens.css';
+
+@theme inline {
+  --color-bg: var(--fs-bg);
+  --color-surface: var(--fs-surface);
+  --color-surface-2: var(--fs-surface-2);
+  --color-surface-3: var(--fs-surface-3);
+  --color-ink: var(--fs-ink);
+  --color-ink-2: var(--fs-ink-2);
+  --color-ink-3: var(--fs-ink-3);
+  --color-line: var(--fs-line);
+  --color-line-strong: var(--fs-line-strong);
+  --color-accent: var(--fs-accent);
+  --color-accent-ink: var(--fs-accent-ink);
+  --color-accent-soft: var(--fs-accent-soft);
+  --color-accent-line: var(--fs-accent-line);
+  --color-clay: var(--fs-clay);
+  --color-ok: var(--fs-ok);
+  --color-closed: var(--fs-closed);
+
+  --color-chip: var(--fs-chip-bg);
+  --color-chip-line: var(--fs-chip-line);
+  --color-chip-key: var(--fs-chip-key-bg);
+  --color-chip-key-ink: var(--fs-chip-key-ink);
+  --color-chip-ink: var(--fs-chip-ink);
+  --color-chip-op: var(--fs-chip-op);
+  --color-chip-hover: var(--fs-chip-hover);
+  --color-chip-not: var(--fs-chip-not-bg);
+  --color-chip-not-line: var(--fs-chip-not-line);
+  --color-chip-not-ink: var(--fs-chip-not-ink);
+
+  --font-sans: var(--fs-sans);
+  --font-mono: var(--fs-mono);
+
+  --shadow-pop: var(--fs-shadow);
+}
+
+/*
+ * One custom variant, because the state is in the DOM and Tailwind should be
+ * able to see it. `state-editing:border-dashed` reads better than the
+ * arbitrary form and keeps the contract visible in the markup.
+ */
+@custom-variant state-editing (&[data-editing]);
+@custom-variant state-negated (&[data-negated]);
+@custom-variant state-pending (&[data-pending]);
+@custom-variant state-active (&[data-active='true']);
+@custom-variant state-chosen (&[aria-selected='true']);
+@custom-variant state-busy (&[aria-busy='true']);
+/* Reaches inside a chip: `in-editing:text-accent-ink` on a child. */
+@custom-variant in-editing (:where([data-editing]) &);
+@custom-variant in-negated (:where([data-negated]) &);
+@custom-variant in-pending (:where([data-pending]) &);
