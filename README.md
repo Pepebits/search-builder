@@ -330,5 +330,12 @@ Publishing is staged, never direct: CI can put a version on the registry, only a
 
    The same buttons exist on the package page at npmjs.com.
 
+5. Announce it on Telegram: once the version is live on npm, run **Actions → announce** with the
+   tag. It refuses to go on while `npm view` cannot see the version, builds the message from the
+   tag's `CHANGELOG.md` entry, and defaults to a dry run on the test chat; switch `chat` to
+   `announcements` and turn `dry_run` off to post it. Needs the `TELEGRAM_BOT_TOKEN` and
+   `TELEGRAM_CHAT_ID` secrets, set for the org or this repository (see
+   [Pepebits/release-announce](https://github.com/Pepebits/release-announce)).
+
 A tag whose version is already live is a no-op run. A tag whose version is already *staged* fails
 at the staging step until that stage is approved or rejected.

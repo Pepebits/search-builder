@@ -1,0 +1,67 @@
+# Announces a release on Telegram, by hand, once it is installable.
+#
+# The release workflow only *stages* the version on npm, and a maintainer
+# approves it with 2FA later, so a tag does not mean `npm i` works yet. That is
+# why this is not triggered by the tag: approve the stage on npm, then run
+# Actions → announce. The first job refuses to go on while the version is not
+# live. The message itself is built by Pepebits/release-announce, from the
+# CHANGELOG.md entry at the tag.
+#
+# Needs the TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID secrets (organization or
+# repository ones); without them it builds the message and sends nothing.
+name: announce
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to announce, e.g. v0.2.0
+        type: string
+        required: true
+      chat:
+        description: Where to send it
+        type: choice
+        options: [test, announcements]
+        default: test
+      dry_run:
+        description: Only print the message, send nothing
+        type: boolean
+        default: true
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      # The tag reaches the script through the environment, never through
+      # ${{ }} inside `run:`: a crafted name would otherwise be shell code.
+      - env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::'$TAG' is not a release tag (vX.Y.Z)"; exit 1
+          fi
+          version="${TAG#v}"
+          if ! npm view "@pepebits/search-builder@$version" version >/dev/null 2>&1; then
+            echo "::error::@pepebits/search-builder@$version is not on npm yet. Approve the staged release first (npm stage list @pepebits/search-builder, then npm stage approve <stage-id>), then run this again."
+            exit 1
+          fi
+
+  announce:
+    needs: live
+    permissions:
+      contents: read
+    uses: Pepebits/release-announce/.github/workflows/announce.yml@v1
+    with:
+      tag: ${{ inputs.tag }}
+      chat: ${{ inputs.chat }}
+      dry_run: ${{ inputs.dry_run }}
+      notes_source: changelog
+      project_name: search-builder
+      install_title: 📦 npm
+      install_command: npm i @pepebits/search-builder@{version}
+      # docs/banner.png is picked up by default, at the tag.
+      buttons: >-
+        [{"text": "📝 Changelog", "url": "{repo_url}/blob/{tag}/CHANGELOG.md"},
+         {"text": "📦 npm", "url": "https://www.npmjs.com/package/@pepebits/search-builder/v/{version}"}]
+    secrets: inherit
